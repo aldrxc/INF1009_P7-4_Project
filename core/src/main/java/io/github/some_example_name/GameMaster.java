@@ -7,6 +7,7 @@ import com.badlogic.gdx.Input;
 // IMPORTS
 import io.github.some_example_name.engine.io.IOManager;
 import io.github.some_example_name.tests.TestEntity;
+import com.badlogic.gdx.math.Vector2;
 
 public class GameMaster extends Game {
 
@@ -36,18 +37,20 @@ public class GameMaster extends Game {
         float dt = Gdx.graphics.getDeltaTime();
 
         // We use OUR DynamicInput, not Gdx.input directly!
+        Vector2 pos = testObject.getPosition();
         if (IOManager.getInstance().getDynamicInput().isKeyPressed(Input.Keys.LEFT)) {
-            testObject.getPosition().x -= 200 * dt;
+            pos.x -= 200 * dt;
         }
         if (IOManager.getInstance().getDynamicInput().isKeyPressed(Input.Keys.RIGHT)) {
-            testObject.getPosition().x += 200 * dt;
+            pos.x += 200 * dt;
         }
         if (IOManager.getInstance().getDynamicInput().isKeyPressed(Input.Keys.UP)) {
-            testObject.getPosition().y += 200 * dt;
+            pos.y += 200 * dt;
         }
         if (IOManager.getInstance().getDynamicInput().isKeyPressed(Input.Keys.DOWN)) {
-            testObject.getPosition().y -= 200 * dt;
+            pos.y -= 200 * dt;
         }
+        testObject.setPosition(pos.x, pos.y);
 
         // Test Mouse Input (Hardware Check)
         if (Gdx.input.justTouched()) {

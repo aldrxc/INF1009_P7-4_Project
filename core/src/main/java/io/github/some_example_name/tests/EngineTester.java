@@ -3,6 +3,7 @@ package io.github.some_example_name.tests;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.math.Vector2;
 
 // IMPORT YOUR ENGINE HUB
 import io.github.some_example_name.engine.io.IOManager;
@@ -30,18 +31,20 @@ public class EngineTester extends ApplicationAdapter {
 
         // --- TEST INPUT ---
         // We use our DynamicInput manager, not Gdx.input directly
+        Vector2 pos = testObject.getPosition();
         if (io.getDynamicInput().isKeyPressed(Input.Keys.LEFT)) {
-            testObject.getPosition().x -= 200 * dt;
+            pos.x -= 200 * dt;
         }
         if (io.getDynamicInput().isKeyPressed(Input.Keys.RIGHT)) {
-            testObject.getPosition().x += 200 * dt;
+            pos.x += 200 * dt;
         }
         if (io.getDynamicInput().isKeyPressed(Input.Keys.UP)) {
-            testObject.getPosition().y += 200 * dt;
+            pos.y += 200 * dt;
         }
         if (io.getDynamicInput().isKeyPressed(Input.Keys.DOWN)) {
-            testObject.getPosition().y -= 200 * dt;
+            pos.y -= 200 * dt;
         }
+        testObject.setPosition(pos.x, pos.y);
 
         // Test Mouse Input
         if (Gdx.input.justTouched()) {

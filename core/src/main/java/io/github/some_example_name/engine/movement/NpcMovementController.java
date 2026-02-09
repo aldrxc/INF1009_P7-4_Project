@@ -2,7 +2,7 @@ package io.github.some_example_name.engine.movement;
 
 import com.badlogic.gdx.math.Vector2;
 
-import io.github.some_example_name.engine.entity.GameEntity;
+import io.github.some_example_name.engine.entity.Entity;
 
 public class NpcMovementController {
     
@@ -23,7 +23,7 @@ public class NpcMovementController {
      * @param changeInterval How often to change direction (seconds)
      * @param deltaTime Time since last frame
      */
-    public void wanderRandomly(GameEntity entity, float speed, Vector2 currentDirection, 
+    public void wanderRandomly(Entity entity, float speed, Vector2 currentDirection, 
                                float[] directionTimer, float changeInterval, float deltaTime) {
         
         // Decrease timer
@@ -41,8 +41,11 @@ public class NpcMovementController {
         }
         
         // Move in current direction
-        entity.getPosition().x += currentDirection.x * speed * deltaTime;
-        entity.getPosition().y += currentDirection.y * speed * deltaTime;
+        Vector2 pos = entity.getPosition();
+        entity.setPosition(
+            pos.x + currentDirection.x * speed * deltaTime,
+            pos.y + currentDirection.y * speed * deltaTime
+        );
     }
     
     /**
@@ -61,7 +64,7 @@ public class NpcMovementController {
      * @param maxY Maximum Y boundary for random targets
      * @param deltaTime Time since last frame
      */
-    public void wanderToRandomPoints(GameEntity entity, float speed, Vector2 targetPos,
+    public void wanderToRandomPoints(Entity entity, float speed, Vector2 targetPos,
                                      float stopDistance, float minX, float maxX, 
                                      float minY, float maxY, float deltaTime) {
         
@@ -85,8 +88,11 @@ public class NpcMovementController {
             float dirX = dx / distance;
             float dirY = dy / distance;
             
-            entity.getPosition().x += dirX * speed * deltaTime;
-            entity.getPosition().y += dirY * speed * deltaTime;
+            Vector2 pos = entity.getPosition();
+            entity.setPosition(
+                pos.x + dirX * speed * deltaTime,
+                pos.y + dirY * speed * deltaTime
+            );
         }
     }
     
@@ -103,7 +109,7 @@ public class NpcMovementController {
      * @param speed Chase speed in pixels per second
      * @param deltaTime Time since last frame
      */
-    public void chaseTarget(GameEntity entity, GameEntity target, float speed, float deltaTime) {
+    public void chaseTarget(Entity entity, Entity target, float speed, float deltaTime) {
         // Calculate centers
         float entityCenterX = entity.getPosition().x + entity.getWidth() / 2;
         float entityCenterY = entity.getPosition().y + entity.getHeight() / 2;
@@ -120,8 +126,11 @@ public class NpcMovementController {
             float dirX = dx / distance;
             float dirY = dy / distance;
             
-            entity.getPosition().x += dirX * speed * deltaTime;
-            entity.getPosition().y += dirY * speed * deltaTime;
+            Vector2 pos = entity.getPosition();
+            entity.setPosition(
+                pos.x + dirX * speed * deltaTime,
+                pos.y + dirY * speed * deltaTime
+            );
         }
     }
     
@@ -135,7 +144,7 @@ public class NpcMovementController {
      * @param deltaTime Time since last frame
      * @return true if currently chasing, false if target out of range
      */
-    public boolean chaseIfInRange(GameEntity entity, GameEntity target, float speed, 
+    public boolean chaseIfInRange(Entity entity, Entity target, float speed, 
                                   float detectionRange, float deltaTime) {
         
         // Calculate distance between centers
@@ -168,7 +177,7 @@ public class NpcMovementController {
      * @param speed Flee speed in pixels per second
      * @param deltaTime Time since last frame
      */
-    public void fleeFromThreat(GameEntity entity, GameEntity threat, float speed, float deltaTime) {
+    public void fleeFromThreat(Entity entity, Entity threat, float speed, float deltaTime) {
         // Calculate centers
         float entityCenterX = entity.getPosition().x + entity.getWidth() / 2;
         float entityCenterY = entity.getPosition().y + entity.getHeight() / 2;
@@ -185,8 +194,11 @@ public class NpcMovementController {
             float dirX = dx / distance;
             float dirY = dy / distance;
             
-            entity.getPosition().x += dirX * speed * deltaTime;
-            entity.getPosition().y += dirY * speed * deltaTime;
+            Vector2 pos = entity.getPosition();
+            entity.setPosition(
+                pos.x + dirX * speed * deltaTime,
+                pos.y + dirY * speed * deltaTime
+            );
         }
     }
     
@@ -200,7 +212,7 @@ public class NpcMovementController {
      * @param deltaTime Time since last frame
      * @return true if currently fleeing, false if threat far enough
      */
-    public boolean fleeIfTooClose(GameEntity entity, GameEntity threat, float speed, 
+    public boolean fleeIfTooClose(Entity entity, Entity threat, float speed, 
                                   float dangerRange, float deltaTime) {
         
         // Calculate distance between centers

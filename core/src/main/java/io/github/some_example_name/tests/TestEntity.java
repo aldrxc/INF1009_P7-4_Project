@@ -6,15 +6,15 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Disposable;
-import io.github.some_example_name.engine.entity.GameEntity;
 
-public class TestEntity extends GameEntity implements Disposable {
+import io.github.some_example_name.engine.entity.Entity;
+
+public class TestEntity extends Entity implements Disposable {
     private Texture texture;
     private TextureRegion region;
-    private Vector2 position;
 
     public TestEntity(float x, float y) {
-        position = new Vector2(x, y);
+        super(x, y);
 
         // CHANGE 1: We create a 50x50 pixel image directly (instead of 1x1)
         // This ensures the red square is visible even if scaling fails.
@@ -28,13 +28,18 @@ public class TestEntity extends GameEntity implements Disposable {
     }
 
     @Override
+    public void update(float deltaTime) {
+        applyMovement(deltaTime);
+    }
+
+    @Override
     public TextureRegion getTexture() {
         return region;
     }
 
     @Override
     public Vector2 getPosition() {
-        return position;
+        return new Vector2(getPositionX(), getPositionY());
     }
 
     // CHANGE 2: Simplified width/height to just return the size of our texture

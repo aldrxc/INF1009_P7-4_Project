@@ -2,7 +2,7 @@ package io.github.some_example_name.engine.movement;
 
 import com.badlogic.gdx.math.Vector2;
 
-import io.github.some_example_name.engine.entity.GameEntity;
+import io.github.some_example_name.engine.entity.Entity;
 
 /**
  * MovementHelper - Utility class for movement calculations
@@ -20,7 +20,7 @@ public class MovementCalculation {
      * @param entity The entity
      * @return Vector2 containing center coordinates
      */
-    public Vector2 getEntityCenter(GameEntity entity) {
+    public Vector2 getEntityCenter(Entity entity) {
         float centerX = entity.getPosition().x + entity.getWidth() / 2;
         float centerY = entity.getPosition().y + entity.getHeight() / 2;
         return new Vector2(centerX, centerY);
@@ -34,7 +34,7 @@ public class MovementCalculation {
      * @param b Second entity
      * @return Distance in pixels
      */
-    public float getDistanceBetween(GameEntity a, GameEntity b) {
+    public float getDistanceBetween(Entity a, Entity b) {
         Vector2 centerA = getEntityCenter(a);
         Vector2 centerB = getEntityCenter(b);
         
@@ -52,7 +52,7 @@ public class MovementCalculation {
      * @param to Target entity
      * @return Normalized direction vector
      */
-    public Vector2 getDirectionTo(GameEntity from, GameEntity to) {
+    public Vector2 getDirectionTo(Entity from, Entity to) {
         Vector2 centerFrom = getEntityCenter(from);
         Vector2 centerTo = getEntityCenter(to);
         
@@ -76,7 +76,7 @@ public class MovementCalculation {
      * @param awayFrom Entity to move away from
      * @return Normalized direction vector (opposite direction)
      */
-    public Vector2 getDirectionAwayFrom(GameEntity from, GameEntity awayFrom) {
+    public Vector2 getDirectionAwayFrom(Entity from, Entity awayFrom) {
         Vector2 centerFrom = getEntityCenter(from);
         Vector2 centerAwayFrom = getEntityCenter(awayFrom);
         
@@ -101,7 +101,7 @@ public class MovementCalculation {
      * @param range Distance threshold in pixels
      * @return true if entities are within range
      */
-    public boolean isInRange(GameEntity a, GameEntity b, float range) {
+    public boolean isInRange(Entity a, Entity b, float range) {
         return getDistanceBetween(a, b) <= range;
     }
     
@@ -115,7 +115,7 @@ public class MovementCalculation {
      * @param to Target entity
      * @return Angle in degrees
      */
-    public float getAngleTo(GameEntity from, GameEntity to) {
+    public float getAngleTo(Entity from, Entity to) {
         Vector2 direction = getDirectionTo(from, to);
         return (float) Math.toDegrees(Math.atan2(direction.y, direction.x));
     }
@@ -128,8 +128,11 @@ public class MovementCalculation {
      * @param velocity Velocity vector in pixels per second
      * @param deltaTime Time since last frame
      */
-    public void applyVelocity(GameEntity entity, Vector2 velocity, float deltaTime) {
-        entity.getPosition().x += velocity.x * deltaTime;
-        entity.getPosition().y += velocity.y * deltaTime;
+    public void applyVelocity(Entity entity, Vector2 velocity, float deltaTime) {
+        Vector2 pos = entity.getPosition();
+        entity.setPosition(
+            pos.x + velocity.x * deltaTime,
+            pos.y + velocity.y * deltaTime
+        );
     }
 }

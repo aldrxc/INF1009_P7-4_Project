@@ -2,7 +2,7 @@ package io.github.some_example_name.engine.movement;
 
 import com.badlogic.gdx.math.Vector2;
 
-import io.github.some_example_name.engine.entity.GameEntity;
+import io.github.some_example_name.engine.entity.Entity;
 
 /**
  * MovementManager - Coordinator for all movement-related operations
@@ -44,14 +44,14 @@ public class MovementManager {
     /**
      * Handle WASD keyboard movement
      */
-    public void handleWASDMovement(GameEntity entity, float speed, float deltaTime) {
+    public void handleWASDMovement(Entity entity, float speed, float deltaTime) {
         playerController.handleWASDMovement(entity, speed, deltaTime);
     }
     
     /**
      * Handle WASD with normalized diagonal movement
      */
-    public void handleWASDMovementNormalized(GameEntity entity, float speed, float deltaTime) {
+    public void handleWASDMovementNormalized(Entity entity, float speed, float deltaTime) {
         playerController.handleWASDMovementNormalized(entity, speed, deltaTime);
     }
     
@@ -63,7 +63,7 @@ public class MovementManager {
     /**
      * Make NPC wander randomly with smooth direction changes
      */
-    public void wanderRandomly(GameEntity entity, float speed, Vector2 currentDirection, 
+    public void wanderRandomly(Entity entity, float speed, Vector2 currentDirection, 
                                float[] directionTimer, float changeInterval, float deltaTime) {
         aiController.wanderRandomly(entity, speed, currentDirection, directionTimer, 
                                    changeInterval, deltaTime);
@@ -72,7 +72,7 @@ public class MovementManager {
     /**
      * Wander by moving to random points
      */
-    public void wanderToRandomPoints(GameEntity entity, float speed, Vector2 targetPos,
+    public void wanderToRandomPoints(Entity entity, float speed, Vector2 targetPos,
                                      float stopDistance, float minX, float maxX, 
                                      float minY, float maxY, float deltaTime) {
         aiController.wanderToRandomPoints(entity, speed, targetPos, stopDistance, 
@@ -82,14 +82,14 @@ public class MovementManager {
     /**
      * Chase a target entity
      */
-    public void chaseTarget(GameEntity entity, GameEntity target, float speed, float deltaTime) {
+    public void chaseTarget(Entity entity, Entity target, float speed, float deltaTime) {
         aiController.chaseTarget(entity, target, speed, deltaTime);
     }
     
     /**
      * Chase target only if within range
      */
-    public boolean chaseIfInRange(GameEntity entity, GameEntity target, float speed, 
+    public boolean chaseIfInRange(Entity entity, Entity target, float speed, 
                                   float detectionRange, float deltaTime) {
         return aiController.chaseIfInRange(entity, target, speed, detectionRange, deltaTime);
     }
@@ -97,14 +97,14 @@ public class MovementManager {
     /**
      * Flee from a threat
      */
-    public void fleeFromThreat(GameEntity entity, GameEntity threat, float speed, float deltaTime) {
+    public void fleeFromThreat(Entity entity, Entity threat, float speed, float deltaTime) {
         aiController.fleeFromThreat(entity, threat, speed, deltaTime);
     }
     
     /**
      * Flee only if threat is too close
      */
-    public boolean fleeIfTooClose(GameEntity entity, GameEntity threat, float speed, 
+    public boolean fleeIfTooClose(Entity entity, Entity threat, float speed, 
                                   float dangerRange, float deltaTime) {
         return aiController.fleeIfTooClose(entity, threat, speed, dangerRange, deltaTime);
     }
@@ -116,50 +116,54 @@ public class MovementManager {
     /**
      * Get entity center position
      */
-    public Vector2 getEntityCenter(GameEntity entity) {
+    public Vector2 getEntityCenter(Entity entity) {
         return helper.getEntityCenter(entity);
     }
     
     /**
      * Calculate distance between two entities
      */
-    public float getDistanceBetween(GameEntity a, GameEntity b) {
+    public float getDistanceBetween(Entity a, Entity b) {
         return helper.getDistanceBetween(a, b);
     }
     
     /**
      * Get direction from one entity to another
      */
-    public Vector2 getDirectionTo(GameEntity from, GameEntity to) {
+    public Vector2 getDirectionTo(Entity from, Entity to) {
         return helper.getDirectionTo(from, to);
     }
     
     /**
      * Get direction away from target
      */
-    public Vector2 getDirectionAwayFrom(GameEntity from, GameEntity awayFrom) {
+    public Vector2 getDirectionAwayFrom(Entity from, Entity awayFrom) {
         return helper.getDirectionAwayFrom(from, awayFrom);
     }
     
     /**
      * Check if entities are within range
      */
-    public boolean isInRange(GameEntity a, GameEntity b, float range) {
+    public boolean isInRange(Entity a, Entity b, float range) {
         return helper.isInRange(a, b, range);
     }
     
     /**
      * Calculate angle from one entity to another
      */
-    public float getAngleTo(GameEntity from, GameEntity to) {
+    public float getAngleTo(Entity from, Entity to) {
         return helper.getAngleTo(from, to);
     }
     
     /**
      * Apply velocity to entity
      */
-    public void applyVelocity(GameEntity entity, Vector2 velocity, float deltaTime) {
-        helper.applyVelocity(entity, velocity, deltaTime);
+    public void applyVelocity(Entity entity, Vector2 velocity, float deltaTime) {
+        Vector2 pos = entity.getPosition();
+        entity.setPosition(
+            pos.x + velocity.x * deltaTime,
+            pos.y + velocity.y * deltaTime
+        );
     }
     
     // ============================================================================

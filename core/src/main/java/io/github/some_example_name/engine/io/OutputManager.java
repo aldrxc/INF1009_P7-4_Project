@@ -10,7 +10,7 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 // IMPORT THE ENTITY CLASS (See file #5 below)
-import io.github.some_example_name.engine.entity.GameEntity;
+import io.github.some_example_name.engine.entity.Entity;
 
 public class OutputManager implements Disposable {
 
@@ -51,9 +51,9 @@ public class OutputManager implements Disposable {
     }
 
     /**
-     * Draws any object that inherits from GameEntity
+     * Draws any object that inherits from Entity
      */
-    public void drawEntity(GameEntity e) {
+    public void drawEntity(Entity e) {
         if (e.getTexture() != null) {
             batch.draw(e.getTexture(),
                     e.getPosition().x,
