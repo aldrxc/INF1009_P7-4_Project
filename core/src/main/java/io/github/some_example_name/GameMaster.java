@@ -2,89 +2,84 @@ package io.github.some_example_name;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 
-// IMPORTS
 import io.github.some_example_name.engine.io.IOManager;
-import io.github.some_example_name.tests.TestEntity;
+import io.github.some_example_name.engine.scene.SceneManager;
+import io.github.some_example_name.tests.integration.TestGameScene;
+import io.github.some_example_name.tests.integration.TestMenuScene;
 
+/**
+ * GameMaster - Main entry point for the game
+ */
 public class GameMaster extends Game {
-
-    // We add a test object here so we can see if rendering works
-    private TestEntity testObject;
-
+    
+    // Singleton managers
+    private IOManager ioManager;
+    private SceneManager sceneManager;
+    
     @Override
     public void create() {
-        // 1. Initialize the Engine Hub
-        IOManager.getInstance().init();
-        System.out.println("IOManager Online. Systems Check Initiated...");
-
-        // 2. Create a dummy object to test the OutputManager
-        testObject = new TestEntity(200, 200);
-
-        System.out.println("------------------------------------------------");
-        System.out.println(" VISUAL TEST: You should see a RED SQUARE.");
-        System.out.println(" INPUT TEST:  Use ARROW KEYS to move.");
-        System.out.println(" MOUSE TEST:  Click anywhere to see coordinates.");
-        System.out.println(" AUDIO TEST:  Press SPACEBAR to play sound.");
-        System.out.println("------------------------------------------------");
+        System.out.println("╔════════════════════════════════════════╗");
+        System.out.println("║      GAME ENGINE INITIALIZATION        ║");
+        System.out.println("╚════════════════════════════════════════╝");
+        
+        // 1. Init IO
+        ioManager = IOManager.getInstance();
+        ioManager.init();
+        
+        // 2. Init Scenes
+        sceneManager = SceneManager.getInstance();
+        
+        // 3. Load BOTH Scenes
+        // Load Game (but don't start it yet)
+        TestGameScene gameScene = new TestGameScene();
+        sceneManager.load("game", gameScene);
+        
+        // Load Menu (and start this one!)
+        TestMenuScene menuScene = new TestMenuScene();
+        sceneManager.load("menu", menuScene);
+        
+        // Set MENU as the starting screen
+        sceneManager.setActive("menu");
+        
+        System.out.println("✓ Engine Online: Menu Loaded");
+        printControls();
     }
-
+    
     @Override
     public void render() {
-        // --- LOGIC PHASE (Testing InputManager) ---
-        float dt = Gdx.graphics.getDeltaTime();
-
-        // We use OUR DynamicInput, not Gdx.input directly!
-        if (IOManager.getInstance().getDynamicInput().isKeyPressed(Input.Keys.LEFT)) {
-            testObject.getPosition().x -= 200 * dt;
-        }
-        if (IOManager.getInstance().getDynamicInput().isKeyPressed(Input.Keys.RIGHT)) {
-            testObject.getPosition().x += 200 * dt;
-        }
-        if (IOManager.getInstance().getDynamicInput().isKeyPressed(Input.Keys.UP)) {
-            testObject.getPosition().y += 200 * dt;
-        }
-        if (IOManager.getInstance().getDynamicInput().isKeyPressed(Input.Keys.DOWN)) {
-            testObject.getPosition().y -= 200 * dt;
-        }
-
-        // Test Mouse Input (Hardware Check)
-        if (Gdx.input.justTouched()) {
-            System.out.println("[MOUSE] Click detected at: " +
-                    IOManager.getInstance().getDynamicInput().getMousePosition());
-        }
-
-        // AUDIO TEST
-        // We use isKeyJustPressed so it doesn't machine-gun the sound 60 times a second
-        if (IOManager.getInstance().getDynamicInput().isKeyJustPressed(Input.Keys.SPACE)) {
-            System.out.println("[AUDIO] Attempting to play 'test.mp3'...");
-            IOManager.getInstance().getAudio().playSound("test.mp3");
-        }
-
-        // --- RENDER PHASE (Testing OutputManager) ---
-
-        // 1. Clear Screen & Prep Camera
-        IOManager.getInstance().getOutputManager().beginFrame();
-
-        // 2. Draw our test entity
-        IOManager.getInstance().getOutputManager().drawEntity(testObject);
-
-        // 3. Finalize
-        IOManager.getInstance().getOutputManager().endFrame();
+        float delta = Gdx.graphics.getDeltaTime();
+        sceneManager.runFrame(delta);
     }
-
+    
     @Override
     public void resize(int width, int height) {
-        // Test Resize Logic
-        IOManager.getInstance().getOutputManager().resize(width, height);
+        if (ioManager != null && ioManager.getOutputManager() != null) {
+            ioManager.getOutputManager().resize(width, height);
+        }
+        if (sceneManager != null) {
+            sceneManager.resize(width, height);
+        }
     }
-
+    
     @Override
     public void dispose() {
-        // Cleanup
-        testObject.dispose();
-        IOManager.getInstance().dispose();
-        System.out.println("GameMaster Disposed.");
+        System.out.println("\n╔════════════════════════════════════════╗");
+        System.out.println("║         SHUTTING DOWN ENGINE           ║");
+        System.out.println("╚════════════════════════════════════════╝");
+        
+        if (sceneManager != null) sceneManager.dispose();
+        if (ioManager != null) ioManager.dispose();
+    }
+    
+    private void printControls() {
+        System.out.println("\n╔════════════════════════════════════════╗");
+        System.out.println("║              CONTROLS                  ║");
+        System.out.println("╠════════════════════════════════════════╣");
+        System.out.println("║ WASD or Arrow Keys - Move Player       ║");
+        System.out.println("║ R - Reset player position              ║");
+        System.out.println("║ SPACE - Play sound effect              ║");
+        System.out.println("║ ENTER - Start Game (from Menu)         ║");
+        System.out.println("╚════════════════════════════════════════╝\n");
     }
 }
