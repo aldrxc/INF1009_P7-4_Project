@@ -1,9 +1,7 @@
 package io.github.some_example_name.engine.entity;
 
-/**
- * Simple test entity for demonstrating the Entity Manager.
- * This entity just moves based on its velocity.
- */
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+
 public class TestEntity extends Entity {
   
   private String name;
@@ -15,12 +13,20 @@ public class TestEntity extends Entity {
 
   @Override
   public void update(float deltaTime) {
-    // Use the helper method from Entity
     applyMovement(deltaTime);
-
-    // Print position every update (for testing)
     System.out.printf("%s is at (%.2f, %.2f)%n", name, getPositionX(), getPositionY());
   }
+
+  // ===== THE FIX: Added these missing methods =====
+  @Override
+  public TextureRegion getTexture() { return null; }
+
+  @Override
+  public float getWidth() { return 0; }
+
+  @Override
+  public float getHeight() { return 0; }
+  // ==============================================
 
   public String getName() {
     return name;

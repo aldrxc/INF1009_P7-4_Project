@@ -1,6 +1,8 @@
 package io.github.some_example_name.engine.entity;
 
 import java.util.UUID;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector2;
 
 /**
  * Abstract base class for all entities in the Abstract Engine.
@@ -52,6 +54,9 @@ public abstract class Entity {
      * @param deltaTime Time elapsed since last update (in seconds)
      */
     public abstract void update(float deltaTime);
+    public abstract TextureRegion getTexture();
+    public abstract float getWidth();
+    public abstract float getHeight();
 
     // ===== HELPER METHODS =====
 
@@ -93,6 +98,10 @@ public abstract class Entity {
 
     public boolean isActive() {
         return active;
+    }
+
+    public Vector2 getPosition() {
+        return new Vector2(positionX, positionY);
     }
 
     // ===== SETTERS =====

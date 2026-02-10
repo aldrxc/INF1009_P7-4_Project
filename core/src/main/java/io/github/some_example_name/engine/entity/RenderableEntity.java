@@ -2,22 +2,15 @@ package io.github.some_example_name.engine.entity;
 
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
 
-import io.github.some_example_name.engine.collision.Collidable;
-
-public abstract class RenderableEntity extends Entity implements Collidable {
+// === ISP FIX: Removed 'implements Collidable' ===
+// Now this class has ONE responsibility: Rendering.
+public abstract class RenderableEntity extends Entity {
     
-    // Rendering data
-    private float width;
-    private float height;
-    private TextureRegion texture;
-    
-    // Collision data
-    private Rectangle bounds;
-    
-    // Cached adapter
-    private GameEntity cachedAdapter;
+    protected float width;
+    protected float height;
+    protected TextureRegion texture;
+    protected Rectangle bounds;
     
     public RenderableEntity(float x, float y, float width, float height) {
         super(x, y); 
@@ -26,42 +19,25 @@ public abstract class RenderableEntity extends Entity implements Collidable {
         this.bounds = new Rectangle(x, y, width, height);
     }
     
-    // ===== SMART BRIDGE METHOD =====
-    public GameEntity asGameEntity() {
-        if (cachedAdapter == null) {
-            cachedAdapter = new GameEntity() {
-                @Override
-                public TextureRegion getTexture() { return RenderableEntity.this.texture; }
-                @Override
-                public Vector2 getPosition() { return new Vector2(getPositionX(), getPositionY()); }
-                @Override
-                public float getWidth() { return RenderableEntity.this.width; }
-                @Override
-                public float getHeight() { return RenderableEntity.this.height; }
-            };
-        }
-        return cachedAdapter;
-    }
-    
-    // ===== Collidable IMPLEMENTATION =====
-    @Override
+    // We keep this helper because it's useful, but we don't force the Interface anymore.
     public Rectangle getBounds() {
-        bounds.set(getPositionX(), getPositionY(), width, height);
+        bounds.setPosition(getPositionX(), getPositionY());
         return bounds;
     }
     
+    // ===== Entity Implementation =====
     @Override
-    public void onCollision(Collidable other) {
-        // Subclasses will override this
-    }
-    
-    // ===== GETTERS/SETTERS =====
     public TextureRegion getTexture() { return texture; }
-    public void setTexture(TextureRegion texture) { this.texture = texture; }
+    
+    @Override
     public float getWidth() { return width; }
+    
+    @Override
     public float getHeight() { return height; }
     
-    // --- THIS WAS MISSING! ---
+    // ===== Setters =====
+    public void setTexture(TextureRegion texture) { this.texture = texture; }
+    
     public void setSize(float width, float height) {
         this.width = width;
         this.height = height;
