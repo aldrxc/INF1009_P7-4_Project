@@ -6,13 +6,13 @@ import io.github.some_example_name.engine.entity.Entity;
 
 public class MovementManager {
     
-    private final PlayerMovementController playerController;
-    private final NpcMovementController aiController;
-    private final MovementCalculation helper;
+    private PlayerMovementController playerController;
+    private NpcMovementController npcController;
+    private MovementCalculation helper;
     
     public MovementManager() {
         this.playerController = new PlayerMovementController();
-        this.aiController = new NpcMovementController();
+        this.npcController = new NpcMovementController();
         this.helper = new MovementCalculation();
     }
     
@@ -23,7 +23,7 @@ public class MovementManager {
     
     // Npc Movement
     public void moveNpc(Entity entity, com.badlogic.gdx.math.Vector2 velocity, float deltaTime) {
-        aiController.moveEntity(entity, velocity, deltaTime);
+        npcController.moveEntity(entity, velocity, deltaTime);
     }
     
     // Helper Methods
@@ -39,8 +39,8 @@ public class MovementManager {
         return playerController;
     }
 
-    public NpcMovementController getAIController() {
-        return aiController;
+    public NpcMovementController getNpcController() {
+        return npcController;
     }
     
     public MovementCalculation getHelper() {

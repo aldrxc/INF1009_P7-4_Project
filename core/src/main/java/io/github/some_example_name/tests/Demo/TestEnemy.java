@@ -1,10 +1,12 @@
 package io.github.some_example_name.tests.Demo;
 
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector2;
 
 import io.github.some_example_name.engine.collision.Collidable;
 import io.github.some_example_name.engine.entity.RenderableEntity;
 import io.github.some_example_name.engine.io.IOManager;
+import io.github.some_example_name.engine.movement.MovementManager;
 
 // === ISP FIX: Explicitly implements Collidable ===
 public class TestEnemy extends RenderableEntity implements Collidable {
@@ -17,6 +19,8 @@ public class TestEnemy extends RenderableEntity implements Collidable {
     private float soundTimer = 0f;
     private float slideDirection = 1f; 
 
+    private MovementManager movementManager;
+
     public TestEnemy(String name, float x, float y) {
         super(x, y, 48, 48);
         
@@ -24,6 +28,8 @@ public class TestEnemy extends RenderableEntity implements Collidable {
         redTexture = DemoTextureFactory.createEnemyTexture(false);
         yellowTexture = DemoTextureFactory.createEnemyTexture(true);
         this.setTexture(redTexture);
+
+        this.movementManager = new MovementManager();
     }
 
     @Override
@@ -31,15 +37,13 @@ public class TestEnemy extends RenderableEntity implements Collidable {
         if (soundTimer > 0) soundTimer -= deltaTime;
         this.setTexture(redTexture); 
 
-        float newY = getPositionY() - (speed * deltaTime);
-        
-        if (newY < -50) {
-            newY = 650;
+        Vector2 velocity = new Vector2(0, -speed);
+        movementManager.moveNpc(this, velocity, deltaTime);
+
+        if (getPositionY() < -50) {
             float newX = (float) (Math.random() * 750);
-            super.setPosition(newX, newY);
+            setPosition(newX, 650);
             slideDirection = Math.random() > 0.5 ? 1f : -1f;
-        } else {
-            super.setPosition(getPositionX(), newY);
         }
     }
     

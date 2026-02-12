@@ -6,7 +6,7 @@ import io.github.some_example_name.engine.entity.Entity;
 
 public class NpcMovementController {
     
-    private final MovementCalculation helper;
+    private MovementCalculation helper;
 
     public NpcMovementController() {
         this.helper = new MovementCalculation();
