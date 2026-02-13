@@ -6,11 +6,18 @@ import com.badlogic.gdx.utils.Disposable;
 import java.util.HashMap;
 import java.util.Map;
 
-// Interfaces: Implements Disposable for cleanup and InputProcessor for logic
+/**
+ * DynamicInput - input buffer
+ * implements InputProcessor so can listen to hardware events
+ * implements Disposable for cleanup consistency
+ */
 public class DynamicInput implements InputProcessor, Disposable {
 
+    // maps to store state of any key without giant array
+    // key = KeyCode (integer), value = IsPressed (boolean)
     private Map<Integer, Boolean> keyState;
     private Map<Integer, Boolean> keyJustPressed;
+
     private Vector2 mousePosition;
 
     public void initialize() {
@@ -19,15 +26,23 @@ public class DynamicInput implements InputProcessor, Disposable {
         mousePosition = new Vector2();
     }
 
-    // --- Logic Queries ---
+    /**
+     * checks if a key is currently held down
+     */
     public boolean isKeyPressed(int keycode) {
         return keyState.getOrDefault(keycode, false);
     }
 
+    /**
+     * checks if a key was pressed this frame
+     * good to prevent unwanted repeated actions instantly
+     */
     public boolean isKeyJustPressed(int keycode) {
         boolean pressed = keyJustPressed.getOrDefault(keycode, false);
-        if (pressed)
+        if (pressed) {
+            // consume press so it returns false next time asked
             keyJustPressed.put(keycode, false);
+        }
         return pressed;
     }
 
@@ -35,35 +50,39 @@ public class DynamicInput implements InputProcessor, Disposable {
         return mousePosition;
     }
 
-    // --- InputProcessor Implementation ---
+    // libgdx hardware callbacks (os calls these)
+    // these methods run whenever user touches keyboard/mouse
+
     @Override
     public boolean keyDown(int keycode) {
-        keyState.put(keycode, true);
-        keyJustPressed.put(keycode, true);
-        return true;
+        keyState.put(keycode, true); // remember key is held down
+        keyJustPressed.put(keycode, true); // mark key as just pressed
+        return true; // return true to say handled this event
     }
 
     @Override
     public boolean keyUp(int keycode) {
-        keyState.put(keycode, false);
+        keyState.put(keycode, false); // key is let go
         return true;
     }
 
     @Override
     public boolean touchDown(int x, int y, int p, int b) {
-        mousePosition.set(x, y);
+        mousePosition.set(x, y); // update mouse coordinates on click
         return true;
     }
 
-    @Override
-    public boolean touchUp(int x, int y, int p, int b) {
-        mousePosition.set(x, y);
-        return true;
-    }
-
+    // track movement even if not clicking
     @Override
     public boolean mouseMoved(int x, int y) {
         mousePosition.set(x, y);
+        return true;
+    }
+
+    // unused methods required by interface
+    // leave these empty because dont need them yet
+    @Override
+    public boolean touchUp(int x, int y, int p, int b) {
         return true;
     }
 
