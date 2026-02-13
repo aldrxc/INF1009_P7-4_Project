@@ -1,27 +1,24 @@
 package io.github.some_example_name.engine.io;
-// package main.java.io.github.some_example_name.engine.io;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Disposable;
 
 public class IOManager implements Disposable {
 
-    // 1. Singleton Instance
+    // Encapsulation: Singleton instance
     private static IOManager instance;
 
-    // 2. Composition: The Manager "owns" these sub-systems
+    // Encapsulation: Composition of sub-managers
     private AudioOutput audio;
     private DynamicInput dynamicInput;
     private OutputManager outputManager;
 
-    // 3. Private Constructor (Singleton Pattern)
     private IOManager() {
         audio = new AudioOutput();
         dynamicInput = new DynamicInput();
         outputManager = new OutputManager();
     }
 
-    // 4. Global Access Point
     public static IOManager getInstance() {
         if (instance == null) {
             instance = new IOManager();
@@ -29,19 +26,18 @@ public class IOManager implements Disposable {
         return instance;
     }
 
-    /**
-     * Call this in your GameMaster.create()
-     */
+    // Abstraction: Simple public API to start the engine
     public void init() {
-        // Initialize the renderer
+        // Explicit Initialization Order
+        audio.initialize();
         outputManager.initialize();
+        dynamicInput.initialize();
 
-        // Tell LibGDX to send all keyboard/mouse events to our DynamicInput class
+        // Polymorphism/Interface: LibGDX expects an InputProcessor interface
         Gdx.input.setInputProcessor(dynamicInput);
     }
 
-    // --- Getters for the Sub-Managers ---
-
+    // Encapsulation: Getters provide access without allowing replacement
     public AudioOutput getAudio() {
         return audio;
     }
@@ -60,8 +56,9 @@ public class IOManager implements Disposable {
             audio.dispose();
         if (outputManager != null)
             outputManager.dispose();
+        if (dynamicInput != null)
+            dynamicInput.dispose();
 
-        // Reset the input processor to avoid memory leaks or crashes
         Gdx.input.setInputProcessor(null);
     }
 }

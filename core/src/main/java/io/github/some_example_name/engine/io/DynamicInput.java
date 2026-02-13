@@ -1,37 +1,33 @@
 package io.github.some_example_name.engine.io;
-// package main.java.io.github.some_example_name.engine.io;
 
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Disposable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DynamicInput implements InputProcessor {
+// Interfaces: Implements Disposable for cleanup and InputProcessor for logic
+public class DynamicInput implements InputProcessor, Disposable {
 
-    // Maps KeyCodes (Integers) to Boolean states
     private Map<Integer, Boolean> keyState;
     private Map<Integer, Boolean> keyJustPressed;
-
-    private String currentInput = "";
     private Vector2 mousePosition;
 
-    public DynamicInput() {
+    public void initialize() {
         keyState = new HashMap<>();
         keyJustPressed = new HashMap<>();
         mousePosition = new Vector2();
     }
 
-    // --- LOGIC QUERIES (Used by your Game Loop) ---
-
+    // --- Logic Queries ---
     public boolean isKeyPressed(int keycode) {
         return keyState.getOrDefault(keycode, false);
     }
 
     public boolean isKeyJustPressed(int keycode) {
         boolean pressed = keyJustPressed.getOrDefault(keycode, false);
-        if (pressed) {
-            keyJustPressed.put(keycode, false); // Consume the event so it only fires once
-        }
+        if (pressed)
+            keyJustPressed.put(keycode, false);
         return pressed;
     }
 
@@ -39,8 +35,7 @@ public class DynamicInput implements InputProcessor {
         return mousePosition;
     }
 
-    // --- LIBGDX CALLBACKS (Hardware Events) ---
-
+    // --- InputProcessor Implementation ---
     @Override
     public boolean keyDown(int keycode) {
         keyState.put(keycode, true);
@@ -55,42 +50,46 @@ public class DynamicInput implements InputProcessor {
     }
 
     @Override
-    public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        mousePosition.set(screenX, screenY);
+    public boolean touchDown(int x, int y, int p, int b) {
+        mousePosition.set(x, y);
         return true;
     }
 
     @Override
-    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        mousePosition.set(screenX, screenY);
+    public boolean touchUp(int x, int y, int p, int b) {
+        mousePosition.set(x, y);
         return true;
     }
 
     @Override
-    public boolean mouseMoved(int screenX, int screenY) {
-        mousePosition.set(screenX, screenY);
+    public boolean mouseMoved(int x, int y) {
+        mousePosition.set(x, y);
         return true;
     }
 
     @Override
-    public boolean keyTyped(char character) {
-        currentInput += character;
-        return true;
-    }
-
-    @Override
-    public boolean touchCancelled(int sX, int sY, int p, int b) {
+    public boolean keyTyped(char c) {
         return false;
     }
 
     @Override
-    public boolean touchDragged(int sX, int sY, int p) {
-        mousePosition.set(sX, sY);
-        return true;
+    public boolean touchCancelled(int x, int y, int p, int b) {
+        return false;
     }
 
     @Override
-    public boolean scrolled(float aX, float aY) {
+    public boolean touchDragged(int x, int y, int p) {
         return false;
+    }
+
+    @Override
+    public boolean scrolled(float x, float y) {
+        return false;
+    }
+
+    @Override
+    public void dispose() {
+        keyState.clear();
+        keyJustPressed.clear();
     }
 }
