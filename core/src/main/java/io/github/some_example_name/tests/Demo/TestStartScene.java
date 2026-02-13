@@ -5,15 +5,18 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout; // <--- NEW IMPORT for centering
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.utils.ScreenUtils;
 
+// removed: SpriteBatch import (use the engine's batch)
+// import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+
+import io.github.some_example_name.engine.io.IOManager;
+import io.github.some_example_name.engine.io.OutputManager;
 import io.github.some_example_name.engine.scene.AbstractScene;
 import io.github.some_example_name.engine.scene.SceneManager;
 
 public class TestStartScene extends AbstractScene {
 
-    private SpriteBatch batch;
+    // removed: private SpriteBatch batch;
     private BitmapFont font;
 
     public TestStartScene() {
@@ -21,7 +24,7 @@ public class TestStartScene extends AbstractScene {
 
     @Override
     protected void onInitialise() {
-        batch = new SpriteBatch();
+        // removed: batch = new SpriteBatch();
         font = new BitmapFont();
         font.getData().setScale(2.0f);
         font.setColor(Color.WHITE);
@@ -37,29 +40,30 @@ public class TestStartScene extends AbstractScene {
 
     @Override
     public void render(float delta) {
-        ScreenUtils.clear(0, 0, 0, 1);
-        
-        // === THE FIX ===
-        // 1. Update the batch to match the CURRENT screen size (Fullscreen or Windowed)
-        batch.getProjectionMatrix().setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        
-        batch.begin();
-        
+        // 1. get engine's OutputManager
+        OutputManager output = IOManager.getInstance().getOutputManager();
+
+        // 2. begin frame (this clears screen and sets up 800x600 camera)
+        output.beginFrame();
+
         String text = "PRESS ENTER TO START";
-        
-        // 2. Calculate PERFECT center (instead of guessing -300)
+
+        // 3. calculate center based on virtual resolution (800x600)
+        // do not use Gdx.graphics.getWidth() because that is the window size
         GlyphLayout layout = new GlyphLayout(font, text);
-        float x = (Gdx.graphics.getWidth() - layout.width) / 2f;
-        float y = (Gdx.graphics.getHeight() + layout.height) / 2f;
-        
-        font.draw(batch, layout, x, y);
-        
-        batch.end();
+        float x = (800 - layout.width) / 2f;
+        float y = (600 + layout.height) / 2f;
+
+        // 4. draw using engine's batch
+        font.draw(output.getBatch(), layout, x, y);
+
+        output.endFrame();
     }
 
     @Override
     protected void onDispose() {
-        if (batch != null) batch.dispose();
-        if (font != null) font.dispose();
+        // removed: if (batch != null) batch.dispose();
+        if (font != null)
+            font.dispose();
     }
 }
