@@ -1,5 +1,4 @@
 package io.github.some_example_name.engine.io;
-// package main.java.io.github.some_example_name.engine.io;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
@@ -8,16 +7,27 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-
 import io.github.some_example_name.engine.entity.Entity;
 
+// /**
+//  * OutputManager - handles all visuals
+//  * hides the complex OpenGL calls (glClearing, Matrices)
+//  * behind simple methods like beginFrame() and drawEntity()
+//  */
 public class OutputManager implements Disposable {
 
+    // SpriteBatch is object that actually sends images to GPU
     private SpriteBatch batch;
+
+    // camera determines where we are looking in game world
     private OrthographicCamera camera;
+
+    // viewport handles how game looks on different screen sizes
+    // such as adding black bars if aspect ratio doesnt match
     private Viewport viewport;
 
-    // Virtual resolution (Game logic thinks the screen is this size)
+    // define a virtual resolution
+    // game thinks screen is always 800x600, regardless of real monitor size
     private static final float WORLD_WIDTH = 800;
     private static final float WORLD_HEIGHT = 600;
 
@@ -25,51 +35,70 @@ public class OutputManager implements Disposable {
         batch = new SpriteBatch();
         camera = new OrthographicCamera();
 
-        // FitViewport ensures the game looks good on any screen size (black bars if
-        // needed)
+        // FITVIEWPORT - specific tool that prevents content from running off screen
+        // scales entire game down to fit the window, maintaining aspect ratio
         viewport = new FitViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
-        viewport.apply();
 
+        // center camera so (0,0) isnt in corner, but middle
         camera.position.set(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, 0);
+        camera.update();
     }
 
+    /**
+     * called when window is resized by user
+     * updates viewport so game doesnt look stretched or squashed
+     */
     public void resize(int width, int height) {
+        // 'true' parameter moves camera to center of new size
+        // without this, resizing window shifts view and hides text
         if (viewport != null) {
-            viewport.update(width, height);
+            viewport.update(width, height, true);
         }
     }
 
+    /**
+     * call this at start of every render loop
+     * clears screen to black and prepares batch for drawing
+     */
     public void beginFrame() {
-        // Clear Screen Black
+        // clear screen to black (adds "black bars" if window aspect ratio is wrong)
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+        // apply the camera updates to batch
         camera.update();
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
     }
 
     /**
-     * Draws any object that inherits from Entity
+     * this method accepts any object that extends Entity
+     * doesnt care if its a Player, Enemy, or Wall
+     * as long as its an Entity, draws it
      */
     public void drawEntity(Entity e) {
         if (e.getTexture() != null) {
-            batch.draw(e.getTexture(),
-                    e.getPosition().x,
-                    e.getPosition().y,
-                    e.getWidth(),
-                    e.getHeight());
+            batch.draw(e.getTexture(), e.getPosition().x, e.getPosition().y, e.getWidth(), e.getHeight());
         }
     }
 
+    /**
+     * call this at end of every render loop
+     * sends final batch of images to GPU
+     */
     public void endFrame() {
-        if (batch.isDrawing()) {
+        if (batch.isDrawing())
             batch.end();
-        }
+    }
+
+    // helper getter if need to access batch for drawing text in GameMaster
+    public SpriteBatch getBatch() {
+        return batch;
     }
 
     @Override
     public void dispose() {
+        // SpriteBatch is heavy (uses GPU memory), so must dispose it manually
         if (batch != null)
             batch.dispose();
     }

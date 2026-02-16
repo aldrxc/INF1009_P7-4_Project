@@ -1,36 +1,47 @@
 package io.github.some_example_name.engine.io;
-// package main.java.io.github.some_example_name.engine.io;
 
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Disposable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DynamicInput implements InputProcessor {
+/**
+ * DynamicInput - input buffer
+ * implements InputProcessor so can listen to hardware events
+ * implements Disposable for cleanup consistency
+ */
+public class DynamicInput implements InputProcessor, Disposable {
 
-    // Maps KeyCodes (Integers) to Boolean states
+    // maps to store state of any key without giant array
+    // key = KeyCode (integer), value = IsPressed (boolean)
     private Map<Integer, Boolean> keyState;
     private Map<Integer, Boolean> keyJustPressed;
 
-    private String currentInput = "";
     private Vector2 mousePosition;
 
-    public DynamicInput() {
+    public void initialize() {
         keyState = new HashMap<>();
         keyJustPressed = new HashMap<>();
         mousePosition = new Vector2();
     }
 
-    // --- LOGIC QUERIES (Used by your Game Loop) ---
-
+    /**
+     * checks if a key is currently held down
+     */
     public boolean isKeyPressed(int keycode) {
         return keyState.getOrDefault(keycode, false);
     }
 
+    /**
+     * checks if a key was pressed this frame
+     * good to prevent unwanted repeated actions instantly
+     */
     public boolean isKeyJustPressed(int keycode) {
         boolean pressed = keyJustPressed.getOrDefault(keycode, false);
         if (pressed) {
-            keyJustPressed.put(keycode, false); // Consume the event so it only fires once
+            // consume press so it returns false next time asked
+            keyJustPressed.put(keycode, false);
         }
         return pressed;
     }
@@ -39,58 +50,65 @@ public class DynamicInput implements InputProcessor {
         return mousePosition;
     }
 
-    // --- LIBGDX CALLBACKS (Hardware Events) ---
+    // libgdx hardware callbacks (os calls these)
+    // these methods run whenever user touches keyboard/mouse
 
     @Override
     public boolean keyDown(int keycode) {
-        keyState.put(keycode, true);
-        keyJustPressed.put(keycode, true);
-        return true;
+        keyState.put(keycode, true); // remember key is held down
+        keyJustPressed.put(keycode, true); // mark key as just pressed
+        return true; // return true to say handled this event
     }
 
     @Override
     public boolean keyUp(int keycode) {
-        keyState.put(keycode, false);
+        keyState.put(keycode, false); // key is let go
         return true;
     }
 
     @Override
-    public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        mousePosition.set(screenX, screenY);
+    public boolean touchDown(int x, int y, int p, int b) {
+        mousePosition.set(x, y); // update mouse coordinates on click
+        return true;
+    }
+
+    // track movement even if not clicking
+    @Override
+    public boolean mouseMoved(int x, int y) {
+        mousePosition.set(x, y);
+        return true;
+    }
+
+    // unused methods required by interface
+    // leave these empty because dont need them yet
+    @Override
+    public boolean touchUp(int x, int y, int p, int b) {
         return true;
     }
 
     @Override
-    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        mousePosition.set(screenX, screenY);
-        return true;
-    }
-
-    @Override
-    public boolean mouseMoved(int screenX, int screenY) {
-        mousePosition.set(screenX, screenY);
-        return true;
-    }
-
-    @Override
-    public boolean keyTyped(char character) {
-        currentInput += character;
-        return true;
-    }
-
-    @Override
-    public boolean touchCancelled(int sX, int sY, int p, int b) {
+    public boolean keyTyped(char c) {
         return false;
     }
 
     @Override
-    public boolean touchDragged(int sX, int sY, int p) {
-        mousePosition.set(sX, sY);
-        return true;
+    public boolean touchCancelled(int x, int y, int p, int b) {
+        return false;
     }
 
     @Override
-    public boolean scrolled(float aX, float aY) {
+    public boolean touchDragged(int x, int y, int p) {
         return false;
+    }
+
+    @Override
+    public boolean scrolled(float x, float y) {
+        return false;
+    }
+
+    @Override
+    public void dispose() {
+        keyState.clear();
+        keyJustPressed.clear();
     }
 }
