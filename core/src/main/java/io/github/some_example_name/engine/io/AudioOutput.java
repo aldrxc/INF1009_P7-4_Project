@@ -17,12 +17,16 @@ public class AudioOutput implements Disposable {
 
     // cache to store loaded sounds so we dont reload them
     private Map<String, Sound> soundEffects;
+
     private Music backgroundMusic;
 
     // default volumes for sfx and bgm
     // private float volume = 1.0f;
     private float sfxVolume = 1.0f;
     private float musicVolume = 0.5f;
+
+    // to track bgm already playing
+    private String currentMusicPath = "";
 
     public void initialize() {
         soundEffects = new HashMap<>();
@@ -42,7 +46,8 @@ public class AudioOutput implements Disposable {
                 Sound s = Gdx.audio.newSound(Gdx.files.internal(fileName));
                 soundEffects.put(fileName, s);
             } else {
-                // avoid crashing if file is missing
+                // print to console if audio file is missing
+                System.err.println("[Audio] missing file: " + fileName);
                 return;
             }
         }
@@ -52,6 +57,11 @@ public class AudioOutput implements Disposable {
 
     // plays music continuously?
     public void playMusic(String fileName) {
+        // check if requested song is already playing
+        if (currentMusicPath.equals(fileName) && backgroundMusic != null && backgroundMusic.isPlaying()) {
+            return; // do nothing & let it keep playing, without restarting
+        }
+
         // stop any existing music (usually only want one bgm at a time)
         if (backgroundMusic != null) {
             backgroundMusic.stop();
@@ -64,6 +74,12 @@ public class AudioOutput implements Disposable {
             backgroundMusic.setLooping(true); // bgm usually loops
             backgroundMusic.setVolume(musicVolume); // usually quieter than SFX
             backgroundMusic.play();
+
+            currentMusicPath = fileName; // remember what bgm is currently playing
+        } else {
+            // print to console if audio file is missing
+            System.err.println("[Audio] missing file: " + fileName);
+            return;
         }
     }
 
