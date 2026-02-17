@@ -1,0 +1,16 @@
+# Gradle local cache
+.gradle/
+
+# Build outputs (all modules)
+**/build/
+
+# Java compiled artifacts
+*.class
+
+# Generated reports
+build/reports/
+**/reports/
+
+# OS/editor noise (optional)
+.DS_Store
+Thumbs.db
