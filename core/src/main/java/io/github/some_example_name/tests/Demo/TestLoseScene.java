@@ -1,4 +1,4 @@
-// core/src/main/java/io/github/some_example_name/tests/Demo/TestStartScene.java
+// core/src/main/java/io/github/some_example_name/tests/Demo/TestLoseScene.java
 package io.github.some_example_name.tests.Demo;
 
 import com.badlogic.gdx.Input;
@@ -10,29 +10,27 @@ import io.github.some_example_name.engine.io.OutputManager;
 import io.github.some_example_name.engine.scene.AbstractScene;
 import io.github.some_example_name.engine.scene.SceneManager;
 
-public class TestStartScene extends AbstractScene {
+public class TestLoseScene extends AbstractScene {
 
-    private BitmapFont titleFont;
-    private BitmapFont bodyFont;
+    private BitmapFont font;
 
     @Override
     protected void onInitialise() {
-        titleFont = new BitmapFont();
-        titleFont.getData().setScale(2.2f);
-        titleFont.setColor(Color.WHITE);
-
-        bodyFont = new BitmapFont();
-        bodyFont.getData().setScale(1.2f);
-        bodyFont.setColor(Color.LIGHT_GRAY);
+        font = new BitmapFont();
+        font.getData().setScale(1.8f);
+        font.setColor(Color.SCARLET);
     }
 
     @Override
     protected void onUpdate(float delta) {
-        if (IOManager.getInstance().getDynamicInput().isKeyJustPressed(Input.Keys.ENTER)) {
-            SceneManager sm = SceneManager.getInstance();
+        SceneManager sm = SceneManager.getInstance();
+        if (IOManager.getInstance().getDynamicInput().isKeyJustPressed(Input.Keys.R)) {
             sm.unload("main");
             sm.load("main", new TestMainScene());
             sm.setActive("main");
+        }
+        if (IOManager.getInstance().getDynamicInput().isKeyJustPressed(Input.Keys.ENTER)) {
+            sm.setActive("start");
         }
     }
 
@@ -42,22 +40,22 @@ public class TestStartScene extends AbstractScene {
         output.beginFrame();
 
         float cx = output.getWorldWidth() / 2f;
-        drawCentered(output, titleFont, "ABSTRACT ENGINE DEMO", cx, 420f);
-        drawCentered(output, bodyFont, "ENTER: START RUN", cx, 340f);
-        drawCentered(output, bodyFont, "SURVIVE 45s TO WIN", cx, 305f);
-        drawCentered(output, bodyFont, "P: PAUSE   RUNTIME HUD ENABLED", cx, 270f);
+        drawCentered(output, "GAME OVER", cx, 370f);
+        drawCentered(output, "SCORE: " + DemoRunStats.getLastScore(), cx, 320f);
+        drawCentered(output, "SURVIVED: " + String.format("%.1fs", DemoRunStats.getLastSurvivalSeconds()), cx, 285f);
+        drawCentered(output, "BEST SCORE: " + DemoRunStats.getBestScore(), cx, 250f);
+        drawCentered(output, "R: RESTART   ENTER: START MENU", cx, 200f);
 
         output.endFrame();
     }
 
-    private void drawCentered(OutputManager output, BitmapFont font, String text, float centerX, float y) {
+    private void drawCentered(OutputManager output, String text, float centerX, float y) {
         GlyphLayout layout = new GlyphLayout(font, text);
         font.draw(output.getBatch(), layout, centerX - layout.width / 2f, y);
     }
 
     @Override
     protected void onDispose() {
-        if (titleFont != null) titleFont.dispose();
-        if (bodyFont != null) bodyFont.dispose();
+        if (font != null) font.dispose();
     }
 }

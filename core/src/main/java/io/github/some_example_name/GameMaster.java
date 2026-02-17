@@ -10,6 +10,8 @@ import io.github.some_example_name.engine.scene.SceneManager;
 import io.github.some_example_name.tests.Demo.TestStartScene;  // formerly Menu
 import io.github.some_example_name.tests.Demo.TestMainScene;   // formerly Game
 import io.github.some_example_name.tests.Demo.TestPauseScene;  // New!
+import io.github.some_example_name.tests.Demo.TestWinScene;    // New!
+import io.github.some_example_name.tests.Demo.TestLoseScene;   // New!
 
 public class GameMaster extends Game {
     
@@ -35,6 +37,8 @@ public class GameMaster extends Game {
         sceneManager.load("start", new TestStartScene());
         sceneManager.load("main", new TestMainScene());
         sceneManager.load("pause", new TestPauseScene());
+        sceneManager.load("win", new TestWinScene());
+        sceneManager.load("lose", new TestLoseScene());
         
         // Start at the Menu
         sceneManager.setActive("start");

@@ -1,14 +1,10 @@
+// core/src/main/java/io/github/some_example_name/tests/Demo/TestPauseScene.java
 package io.github.some_example_name.tests.Demo;
 
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-
-// removed: SpriteBatch import (use the engine's batch)
-// import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-
 import io.github.some_example_name.engine.io.IOManager;
 import io.github.some_example_name.engine.io.OutputManager;
 import io.github.some_example_name.engine.scene.AbstractScene;
@@ -16,60 +12,53 @@ import io.github.some_example_name.engine.scene.SceneManager;
 
 public class TestPauseScene extends AbstractScene {
 
-    // removed: private SpriteBatch batch;
     private BitmapFont font;
-
-    public TestPauseScene() {
-    }
 
     @Override
     protected void onInitialise() {
-        // removed: batch = new SpriteBatch();
         font = new BitmapFont();
-        font.getData().setScale(2.0f);
+        font.getData().setScale(1.8f);
         font.setColor(Color.YELLOW);
     }
 
     @Override
     protected void onUpdate(float delta) {
-        // go back to main game on "p"
+        SceneManager sm = SceneManager.getInstance();
+
         if (IOManager.getInstance().getDynamicInput().isKeyJustPressed(Input.Keys.P)) {
-            // switch back to "main" (formerly game/demo)
-            SceneManager.getInstance().setActive("main");
+            sm.setActive("main");
+        }
+        if (IOManager.getInstance().getDynamicInput().isKeyJustPressed(Input.Keys.R)) {
+            sm.unload("main");
+            sm.load("main", new TestMainScene());
+            sm.setActive("main");
+        }
+        if (IOManager.getInstance().getDynamicInput().isKeyJustPressed(Input.Keys.ESCAPE)) {
+            sm.setActive("start");
         }
     }
 
     @Override
     public void render(float delta) {
         OutputManager output = IOManager.getInstance().getOutputManager();
-
-        // 1. clear screen and setup 800x600 view
         output.beginFrame();
 
-        // 2. define center of the virtual world
-        float centerX = output.getWorldWidth() / 2f;
-        float centerY = output.getWorldHeight() / 2f;
-
-        // 3. draw pause Text
-        String title = "PAUSED";
-        GlyphLayout layoutTitle = new GlyphLayout(font, title);
-        font.draw(output.getBatch(), layoutTitle, centerX - (layoutTitle.width / 2), centerY + 50);
-
-        // 4. draw instruction text
-        font.getData().setScale(1.5f);
-        String sub = "PRESS P TO UNPAUSE";
-        GlyphLayout layoutSub = new GlyphLayout(font, sub);
-        font.draw(output.getBatch(), layoutSub, centerX - (layoutSub.width / 2), centerY - 50);
-
-        font.getData().setScale(2.0f); // reset scale
+        float cx = output.getWorldWidth() / 2f;
+        drawCentered(output, "PAUSED", cx, 360f);
+        drawCentered(output, "P: RESUME", cx, 300f);
+        drawCentered(output, "R: RESTART RUN", cx, 265f);
+        drawCentered(output, "ESC: BACK TO START", cx, 230f);
 
         output.endFrame();
     }
 
+    private void drawCentered(OutputManager output, String text, float centerX, float y) {
+        GlyphLayout layout = new GlyphLayout(font, text);
+        font.draw(output.getBatch(), layout, centerX - layout.width / 2f, y);
+    }
+
     @Override
     protected void onDispose() {
-        // removed: if (batch != null) batch.dispose();
-        if (font != null)
-            font.dispose();
+        if (font != null) font.dispose();
     }
 }
