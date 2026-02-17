@@ -46,6 +46,23 @@ public class AudioOutput implements Disposable {
         soundEffects.get(fileName).play(volume);
     }
 
+    // plays music continuously?
+    public void playMusic(String fileName) {
+        // stop any existing music (usually only want one bgm at a time)
+        if (backgroundMusic != null) {
+            backgroundMusic.stop();
+            backgroundMusic.dispose();
+        }
+
+        // stream new music
+        if (Gdx.files.internal(fileName).exists()) {
+            backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal(fileName));
+            backgroundMusic.setLooping(true); // bgm usually loops
+            backgroundMusic.setVolume(0.5f); // usually quieter than SFX
+            backgroundMusic.play();
+        }
+    }
+
     @Override
     public void dispose() {
         // loop through every sound in cache and dispose it
