@@ -15,7 +15,7 @@ import java.util.Locale;
 
 public class MainScene extends AbstractScene {
 
-    private static final int START_LIVES = 99;
+    private static final int START_LIVES = 5;
     private static final float WIN_TIME_SECONDS = 45f;
     private static final float BASE_ENEMY_SPEED = 150f;
     private static final float MAX_ENEMY_SPEED = 340f;
