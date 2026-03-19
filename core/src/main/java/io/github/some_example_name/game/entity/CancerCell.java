@@ -1,13 +1,16 @@
 package io.github.some_example_name.game.entity;
 
 import com.badlogic.gdx.math.Rectangle;
+
 import io.github.some_example_name.engine.collision.Collidable;
+import io.github.some_example_name.engine.io.IOManager;
 import io.github.some_example_name.engine.movement.MovementManager;
+import io.github.some_example_name.game.movement.PlayerMovement;
 
 public class CancerCell extends GameEntity {
   
   private final HealthBar healthBar;
-  private final MovementManager movementManager;
+  private final PlayerMovement playerMovement;
 
   private static final float STARTING_SIZE = 40f;
   private static final float EXP_PER_LEVEL = 100f;
@@ -20,7 +23,8 @@ public class CancerCell extends GameEntity {
     super(x, y, STARTING_SIZE);
     applySize(STARTING_SIZE);
     this.healthBar = new HealthBar(this, STARTING_SIZE, 5f, 4f);
-    this.movementManager = new MovementManager();
+    this.playerMovement = new PlayerMovement(new MovementManager());
+    this.texture = TextureFactory.createPlayerTexture(); // Placehholder texture!
   }
 
   @Override
@@ -29,22 +33,37 @@ public class CancerCell extends GameEntity {
       setActive(false);
       return;
     }
-    movementManager.handlePlayerMovement(this, 200f, deltaTime);
+    playerMovement.update(deltaTime);
+
+    // normal move
+    playerMovement.movePlayer(this, 200f, deltaTime,
+        key -> IOManager.getInstance().getDynamicInput().isKeyPressed(key));
+
+    // dash on shift
+    if (IOManager.getInstance().getDynamicInput().isKeyJustPressed(com.badlogic.gdx.Input.Keys.SHIFT_LEFT)) {
+        playerMovement.dashPlayer(this, 200f, deltaTime,
+            key -> IOManager.getInstance().getDynamicInput().isKeyPressed(key));
+    }
+    
+    // Keep within boundary
+    float x = Math.max(0, Math.min(getPositionX(), 800 - getWidth()));
+    float y = Math.max(0, Math.min(getPositionY(), 600 - getHeight()));
+    setPosition(x, y);
   }
 
   @Override
   public void onCollision(Collidable other) {
-    if (other instanceof NormalCell) {
-      NormalCell normal = (NormalCell) other;
-      if (!normal.isAlive()) {
-        gainExp(20f);
+      if (other instanceof NormalCell) {
+          NormalCell normal = (NormalCell) other;
+          if (!normal.isAlive()) {
+              gainExp(20f);
+          }
+      } else if (other instanceof TCell) {
+          TCell tCell = (TCell) other;
+          if (!tCell.isAlive()) {
+              gainExp(50f);
+          }
       }
-    } else if (other instanceof TCell) {
-      TCell tCell = (TCell) other;
-      if (!tCell.isAlive()) {
-        gainExp(50f);
-      }
-    }
   }
 
   public void gainExp(float amount) {

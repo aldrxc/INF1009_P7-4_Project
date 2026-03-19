@@ -2,8 +2,10 @@ package io.github.some_example_name.game.entity;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+
 import io.github.some_example_name.engine.collision.Collidable;
 import io.github.some_example_name.engine.movement.MovementManager;
+import io.github.some_example_name.game.movement.NpcBehaviour;
 
 public class TCell extends GameEntity {
   
@@ -14,6 +16,14 @@ public class TCell extends GameEntity {
   private static final float DAMAGE_TO_CANCER = 15f;
   private static final float ATTACK_COOLDOWN = 1.0f;
 
+  // Npc movement state
+  private Vector2 wanderDir = new Vector2(1, 0);
+  private float wanderTimer = 0f;
+  private static final float WANDER_INTERVAL = 2f;
+  private static final float CHASE_RANGE = 200f;
+  private static final float SPEED = 80f;
+  private CancerCell target; // needs to be set after spawn
+
   private float attackCooldown = 0f;
 
   public TCell(float x, float y) {
@@ -21,6 +31,7 @@ public class TCell extends GameEntity {
     applySize(TCELL_SIZE);
     this.healthBar = new HealthBar(this, TCELL_SIZE, 5f, 4f);
     this.movementManager = new MovementManager();
+    this.texture = TextureFactory.createEnemyTexture(false); // Placehholder texture!
   }
 
   @Override
@@ -31,12 +42,27 @@ public class TCell extends GameEntity {
     }
     if (attackCooldown > 0f) attackCooldown -= deltaTime;
 
-    Vector2 velocity = new Vector2(0, -50f);
-    movementManager.moveNpc(this, velocity, deltaTime);
+    // Wander movement logic
+    wanderTimer += deltaTime;
+    wanderDir = NpcBehaviour.updateWanderDirection(wanderDir, wanderTimer, WANDER_INTERVAL);
+    if (wanderTimer >= WANDER_INTERVAL) wanderTimer = 0f;
 
-    if (getPositionY() < -50f) {
-      setPosition(getPositionX(), 650f);
+    // Chase or wander logic
+    if (target != null && movementManager.getDistanceBetween(this, target) < CHASE_RANGE) {
+        NpcBehaviour.chase(this, target, SPEED, deltaTime, movementManager);
+    } else {
+        NpcBehaviour.wander(this, wanderDir, SPEED, deltaTime, movementManager);
     }
+
+    // keep within bounds
+    float x = Math.max(0, Math.min(getPositionX(), 800 - getWidth()));
+    float y = Math.max(0, Math.min(getPositionY(), 600 - getHeight()));
+    setPosition(x, y);
+  }
+  
+  // Targeting logic
+  public void setTarget(CancerCell target) {
+    this.target = target;
   }
 
   @Override

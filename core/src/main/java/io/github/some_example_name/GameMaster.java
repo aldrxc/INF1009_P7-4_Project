@@ -2,14 +2,15 @@ package io.github.some_example_name;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+
 import io.github.some_example_name.engine.io.IOManager;
 import io.github.some_example_name.engine.scene.SceneManager;
-import io.github.some_example_name.tests.Demo.TextureFactory;
-import io.github.some_example_name.tests.Demo.LoseScene;
-import io.github.some_example_name.tests.Demo.MainScene;
-import io.github.some_example_name.tests.Demo.PauseScene;
-import io.github.some_example_name.tests.Demo.StartScene;
-import io.github.some_example_name.tests.Demo.WinScene;
+import io.github.some_example_name.game.scene.GameScene;
+import io.github.some_example_name.game.scene.LoseScene;
+import io.github.some_example_name.game.scene.PauseScene;
+import io.github.some_example_name.game.scene.StartScene;
+import io.github.some_example_name.game.entity.TextureFactory; // Placeholder textures! 
+import io.github.some_example_name.game.scene.WinScene;
 
 public class GameMaster extends Game {
     private IOManager ioManager;
@@ -34,7 +35,7 @@ public class GameMaster extends Game {
         sceneManager.setOnSceneActivated(() -> ioManager.getDynamicInput().clearJustPressed());
 
         sceneManager.load("start", new StartScene(sceneManager));
-        sceneManager.load("main", new MainScene(sceneManager));
+        sceneManager.load("game", new GameScene(sceneManager));
         sceneManager.load("pause", new PauseScene(sceneManager));
         sceneManager.load("win", new WinScene(sceneManager));
         sceneManager.load("lose", new LoseScene(sceneManager));
