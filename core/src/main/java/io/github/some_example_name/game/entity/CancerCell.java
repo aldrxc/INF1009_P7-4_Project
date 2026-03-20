@@ -1,7 +1,5 @@
 package io.github.some_example_name.game.entity;
 
-import com.badlogic.gdx.math.Rectangle;
-
 import io.github.some_example_name.engine.collision.Collidable;
 import io.github.some_example_name.engine.io.IOManager;
 import io.github.some_example_name.engine.movement.MovementManager;
@@ -87,9 +85,6 @@ public class CancerCell extends GameEntity {
 
   @Override
   public int getCollisionMask() { return (1 << 1) | (1 << 2); }
-
-  @Override
-  public Rectangle getBounds() { return super.getBounds(); }
 
   public HealthBar getHealthBar()   { return healthBar; }
   public int getLevel()             { return level; }

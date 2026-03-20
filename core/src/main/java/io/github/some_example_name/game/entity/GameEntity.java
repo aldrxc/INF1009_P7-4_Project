@@ -1,7 +1,8 @@
 package io.github.some_example_name.game.entity;
 
-import io.github.some_example_name.engine.entity.RenderableEntity;
 import io.github.some_example_name.engine.collision.Collidable;
+import io.github.some_example_name.engine.entity.RenderableEntity;
+import io.github.some_example_name.engine.collision.CollisionShape;
 
 public abstract class GameEntity extends RenderableEntity implements Collidable {
   
@@ -35,6 +36,14 @@ public abstract class GameEntity extends RenderableEntity implements Collidable 
 
   public boolean isAlive() {
     return this.hp > 0 && isActive();
+  }
+
+  @Override
+  public CollisionShape getCollisionShape() {
+    float radius = getSize() * 0.5f;
+    float cx = getPositionX() + radius;
+    float cy = getPositionY() + radius;
+    return CollisionShape.circle(cx, cy, radius);
   }
 
   // Getters

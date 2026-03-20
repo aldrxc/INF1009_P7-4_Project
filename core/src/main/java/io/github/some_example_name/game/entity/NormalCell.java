@@ -1,6 +1,5 @@
 package io.github.some_example_name.game.entity;
 
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
 import io.github.some_example_name.engine.collision.Collidable;
@@ -74,9 +73,6 @@ public class NormalCell extends GameEntity {
 
   @Override
   public int getCollisionMask() { return 1 << 0; }
-
-  @Override
-  public Rectangle getBounds() { return super.getBounds(); }
 
   public HealthBar getHealthBar() { return healthBar; }
 }
