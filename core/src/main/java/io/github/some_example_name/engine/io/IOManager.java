@@ -5,17 +5,9 @@ import com.badlogic.gdx.utils.Disposable;
 
 /**
  * IOManager - central hub for all hardware interaction
- * singleton pattern
- * only 1 manager handling inputs and outputs to avoid conflicts
+ * owns the engine IO services used by the application composition root
  */
 public class IOManager implements Disposable {
-
-    // static variable to hold only 1 instance of this class
-    private static IOManager instance;
-
-    // encapsulation (composition)
-    // private so no other class can mess with them directly
-    // IOManager owns these sub managers
     private AudioOutput audio;
     private DynamicInput dynamicInput;
     private OutputManager outputManager;
@@ -24,28 +16,14 @@ public class IOManager implements Disposable {
     private boolean initialised = false; // to prevent multiple init calls
     private boolean disposed = false; // to prevent multiple dispose calls
 
-    /**
-     * private constructor
-     * prevents other classes from calling new IOManager()
-     * instead, must use getInstance()
-     */
-    private IOManager() {
-        audio = new AudioOutput();
-        dynamicInput = new DynamicInput();
-        outputManager = new OutputManager();
+    public IOManager() {
+        this(new OutputConfiguration());
     }
 
-    /**
-     * public accessor
-     * the only way to get IOManager
-     * if it doesnt exist yet, creates it
-     * if it exists, returns existing one
-     */
-    public static IOManager getInstance() {
-        if (instance == null) {
-            instance = new IOManager();
-        }
-        return instance;
+    public IOManager(OutputConfiguration outputConfiguration) {
+        audio = new AudioOutput();
+        dynamicInput = new DynamicInput();
+        outputManager = new OutputManager(outputConfiguration);
     }
 
     /**
@@ -83,6 +61,10 @@ public class IOManager implements Disposable {
 
     public OutputManager getOutputManager() {
         return outputManager;
+    }
+
+    public EngineServices createServices() {
+        return new EngineServices(audio, dynamicInput, outputManager);
     }
 
     /**

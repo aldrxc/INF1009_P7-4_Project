@@ -27,6 +27,7 @@ public final class SceneManager {
     private static final float FIXED_STEP = 1f / 60f;
     private static final int MAX_STEPS_PER_FRAME = 5;
     private float accumulator = 0f;
+    private float interpolationAlpha = 1f;
 
     public SceneManager() {
         this.scenes = new ConcurrentHashMap<>();
@@ -120,11 +121,11 @@ public final class SceneManager {
         }
     }
 
-    public void render(float delta) {
+    public void render(float delta, float interpolationAlpha) {
         Validation.requireValidDelta(delta);
         EngineScreen current = active;
         if (current != null) {
-            current.render(delta);
+            current.render(delta, interpolationAlpha);
         }
     }
 
@@ -141,7 +142,8 @@ public final class SceneManager {
             steps++;
         }
 
-        render(clamped);
+        interpolationAlpha = Math.max(0f, Math.min(1f, accumulator / FIXED_STEP));
+        render(clamped, interpolationAlpha);
     }
 
     public void resize(int width, int height) {
@@ -170,5 +172,9 @@ public final class SceneManager {
             scene.initialise();
             initialisedScenes.add(scene);
         }
+    }
+
+    public float getInterpolationAlpha() {
+        return interpolationAlpha;
     }
 }

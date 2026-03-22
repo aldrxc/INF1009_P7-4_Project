@@ -2,7 +2,9 @@ package io.github.some_example_name;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import io.github.some_example_name.engine.io.EngineServices;
 import io.github.some_example_name.engine.io.IOManager;
+import io.github.some_example_name.engine.io.OutputConfiguration;
 import io.github.some_example_name.engine.scene.SceneManager;
 import io.github.some_example_name.tests.Demo.TextureFactory;
 import io.github.some_example_name.tests.Demo.LoseScene;
@@ -21,23 +23,24 @@ public class GameMaster extends Game {
         System.out.println("=      GAME ENGINE INITIALISATION        =");
         System.out.println("==========================================");
 
-        ioManager = IOManager.getInstance();
+        ioManager = new IOManager(new OutputConfiguration(800f, 600f, 0f, 0f, 0f, 1f));
         ioManager.init();
         ioManager.getAudio().preloadSound("crash.mp3");
         ioManager.getAudio().preloadSound("test.mp3");
+        EngineServices services = ioManager.createServices();
 
         if (ioManager.getOutputManager() != null) {
             ioManager.getOutputManager().resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         }
 
         sceneManager = new SceneManager();
-        sceneManager.setOnSceneActivated(() -> ioManager.getDynamicInput().clearJustPressed());
+        sceneManager.setOnSceneActivated(() -> services.getInput().clearJustPressed());
 
-        sceneManager.load("start", new StartScene(sceneManager));
-        sceneManager.load("main", new MainScene(sceneManager));
-        sceneManager.load("pause", new PauseScene(sceneManager));
-        sceneManager.load("win", new WinScene(sceneManager));
-        sceneManager.load("lose", new LoseScene(sceneManager));
+        sceneManager.load("start", new StartScene(sceneManager, services));
+        sceneManager.load("main", new MainScene(sceneManager, services));
+        sceneManager.load("pause", new PauseScene(sceneManager, services));
+        sceneManager.load("win", new WinScene(sceneManager, services));
+        sceneManager.load("lose", new LoseScene(sceneManager, services));
 
         sceneManager.setActive("start");
         System.out.println("Engine Online: Start Scene Loaded");
