@@ -3,17 +3,21 @@ package io.github.some_example_name;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 
-import io.github.some_example_name.engine.io.IOManager;
+import io.github.some_example_name.engine.io.EngineServices;
+import io.github.some_example_name.engine.io.OutputConfiguration;
 import io.github.some_example_name.engine.scene.SceneManager;
+import io.github.some_example_name.game.entity.TextureFactory;
 import io.github.some_example_name.game.scene.GameScene;
 import io.github.some_example_name.game.scene.LoseScene;
 import io.github.some_example_name.game.scene.PauseScene;
 import io.github.some_example_name.game.scene.StartScene;
-import io.github.some_example_name.game.entity.TextureFactory; // Placeholder textures! 
 import io.github.some_example_name.game.scene.WinScene;
 
 public class GameMaster extends Game {
-    private IOManager ioManager;
+    private static final float LOGIC_STEP_SECONDS = 1f / 60f;
+    private static final int MAX_LOGIC_STEPS_PER_FRAME = 5;
+
+    private EngineServices services;
     private SceneManager sceneManager;
 
     @Override
@@ -22,23 +26,21 @@ public class GameMaster extends Game {
         System.out.println("=      GAME ENGINE INITIALISATION        =");
         System.out.println("==========================================");
 
-        ioManager = IOManager.getInstance();
-        ioManager.init();
-        ioManager.getAudio().preloadSound("crash.mp3");
-        ioManager.getAudio().preloadSound("test.mp3");
+        services = new EngineServices(new OutputConfiguration(800f, 600f, 0f, 0f, 0f, 1f));
+        services.initialize();
+        services.getAudio().preloadSound("crash.mp3");
+        services.getAudio().preloadSound("test.mp3");
 
-        if (ioManager.getOutputManager() != null) {
-            ioManager.getOutputManager().resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        }
+        services.getOutputManager().resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-        sceneManager = new SceneManager();
-        sceneManager.setOnSceneActivated(() -> ioManager.getDynamicInput().clearJustPressed());
+        sceneManager = new SceneManager(LOGIC_STEP_SECONDS, MAX_LOGIC_STEPS_PER_FRAME);
+        sceneManager.setOnSceneActivated(() -> services.getInput().clearJustPressed());
 
-        sceneManager.load("start", new StartScene(sceneManager));
-        sceneManager.load("game", new GameScene(sceneManager));
-        sceneManager.load("pause", new PauseScene(sceneManager));
-        sceneManager.load("win", new WinScene(sceneManager));
-        sceneManager.load("lose", new LoseScene(sceneManager));
+        sceneManager.load("start", new StartScene(sceneManager, services));
+        sceneManager.load("game", new GameScene(sceneManager, services));
+        sceneManager.load("pause", new PauseScene(sceneManager, services));
+        sceneManager.load("win", new WinScene(sceneManager, services));
+        sceneManager.load("lose", new LoseScene(sceneManager, services));
 
         sceneManager.setActive("start");
         System.out.println("Engine Online: Start Scene Loaded");
@@ -52,18 +54,22 @@ public class GameMaster extends Game {
 
     @Override
     public void resize(int width, int height) {
-        if (ioManager != null && ioManager.getOutputManager() != null) {
-            ioManager.getOutputManager().resize(width, height);
+        if (services != null) {
+            services.getOutputManager().resize(width, height);
         }
         if (sceneManager != null) {
             sceneManager.resize(width, height);
         }
     }
-    
+
     @Override
     public void dispose() {
-        if (sceneManager != null) sceneManager.dispose();
-        if (ioManager != null) ioManager.dispose();
+        if (sceneManager != null) {
+            sceneManager.dispose();
+        }
+        if (services != null) {
+            services.dispose();
+        }
         TextureFactory.disposeAll();
     }
 }
