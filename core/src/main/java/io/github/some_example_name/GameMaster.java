@@ -2,21 +2,18 @@ package io.github.some_example_name;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+
 import io.github.some_example_name.engine.io.EngineServices;
 import io.github.some_example_name.engine.io.OutputConfiguration;
 import io.github.some_example_name.engine.scene.SceneManager;
+import io.github.some_example_name.game.entity.TextureFactory;
 import io.github.some_example_name.game.scene.GameScene;
 import io.github.some_example_name.game.scene.LoseScene;
 import io.github.some_example_name.game.scene.PauseScene;
 import io.github.some_example_name.game.scene.StartScene;
-import io.github.some_example_name.game.entity.TextureFactory; // Placeholder textures! 
 import io.github.some_example_name.game.scene.WinScene;
 
 public class GameMaster extends Game {
-    private static final float LOGIC_STEP_SECONDS = 1f / 60f;
-    private static final int MAX_LOGIC_STEPS_PER_FRAME = 5;
-
-    private EngineServices services;
     private static final float LOGIC_STEP_SECONDS = 1f / 60f;
     private static final int MAX_LOGIC_STEPS_PER_FRAME = 5;
 
@@ -34,9 +31,7 @@ public class GameMaster extends Game {
         services.getAudio().preloadSound("crash.mp3");
         services.getAudio().preloadSound("test.mp3");
 
-        if (services.getOutputManager() != null) {
-            services.getOutputManager().resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        }
+        services.getOutputManager().resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         sceneManager = new SceneManager(LOGIC_STEP_SECONDS, MAX_LOGIC_STEPS_PER_FRAME);
         sceneManager.setOnSceneActivated(() -> services.getInput().clearJustPressed());
@@ -59,21 +54,22 @@ public class GameMaster extends Game {
 
     @Override
     public void resize(int width, int height) {
-        if (services != null && services.getOutputManager() != null) {
-            services.getOutputManager().resize(width, height);
-        if (services != null && services.getOutputManager() != null) {
+        if (services != null) {
             services.getOutputManager().resize(width, height);
         }
         if (sceneManager != null) {
             sceneManager.resize(width, height);
         }
     }
-    
+
     @Override
     public void dispose() {
-        if (sceneManager != null) sceneManager.dispose();
-        if (services != null) services.dispose();
-        if (services != null) services.dispose();
+        if (sceneManager != null) {
+            sceneManager.dispose();
+        }
+        if (services != null) {
+            services.dispose();
+        }
         TextureFactory.disposeAll();
     }
 }
