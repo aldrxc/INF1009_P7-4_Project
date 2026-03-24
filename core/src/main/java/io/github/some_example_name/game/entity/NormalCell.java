@@ -1,5 +1,7 @@
 package io.github.some_example_name.game.entity;
 
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 
 import io.github.some_example_name.engine.collision.Collidable;
@@ -28,7 +30,8 @@ public class NormalCell extends GameEntity {
         this.fleeRange = fleeRange;
         this.healthBar     = new HealthBar(this, NORMAL_SIZE, 5f, 4f);
         this.movementManager = new MovementManager();
-        this.texture = TextureFactory.createWallTexture((int) NORMAL_SIZE);
+        Texture sheet = new Texture("Normal_cell.png");
+        this.texture = new TextureRegion(sheet);
     }
 
     @Override
