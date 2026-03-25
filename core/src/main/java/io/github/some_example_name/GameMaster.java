@@ -6,7 +6,6 @@ import com.badlogic.gdx.Gdx;
 import io.github.some_example_name.engine.io.EngineServices;
 import io.github.some_example_name.engine.io.OutputConfiguration;
 import io.github.some_example_name.engine.scene.SceneManager;
-import io.github.some_example_name.game.entity.TextureFactory;
 import io.github.some_example_name.game.scene.GameScene;
 import io.github.some_example_name.game.scene.LoseScene;
 import io.github.some_example_name.game.scene.PauseScene;
@@ -70,6 +69,5 @@ public class GameMaster extends Game {
         if (services != null) {
             services.dispose();
         }
-        TextureFactory.disposeAll();
     }
 }
