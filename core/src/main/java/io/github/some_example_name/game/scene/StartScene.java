@@ -3,7 +3,6 @@ package io.github.some_example_name.game.scene;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-
 import com.badlogic.gdx.graphics.Texture;
 
 import io.github.some_example_name.engine.io.EngineServices;
@@ -104,8 +103,7 @@ public class StartScene extends AbstractScene {
         float textY = clusterY + (iconSize * 1.25f);
 
         // draw wasd
-        UIUtils.drawKeyCluster(output, wTexture, aTexture, sTexture, dTexture,
-                startX, clusterY, iconSize);
+        UIUtils.drawKeyCluster(output, wTexture, aTexture, sTexture, dTexture, startX, clusterY, iconSize);
         float currentX = startX + clusterWidth + spacing;
 
         // draw "/"
@@ -113,18 +111,15 @@ public class StartScene extends AbstractScene {
         currentX += slashLayout.width + spacing;
 
         // draw arrows
-        UIUtils.drawKeyCluster(output, upTexture, leftTexture, downTexture,
-                rightTexture, currentX, clusterY, iconSize);
+        UIUtils.drawKeyCluster(output, upTexture, leftTexture, downTexture, rightTexture, currentX, clusterY, iconSize);
         currentX += clusterWidth + spacing;
 
         // draw "Move"
         bodyFont.draw(output.getBatch(), moveLayout, currentX, textY);
 
         // dash and pause
-        UIUtils.drawPromptCentered(output, bodyFont, shiftTexture, "Dash",
-                cx - 140f, clusterY - 40f);
-        UIUtils.drawPromptCentered(output, bodyFont, pTexture, "Pause", cx + 140f,
-                clusterY - 40f);
+        UIUtils.drawPromptCentered(output, bodyFont, shiftTexture, "Dash", cx - 140f, clusterY - 40f);
+        UIUtils.drawPromptCentered(output, bodyFont, pTexture, "Pause", cx + 140f, clusterY - 40f);
 
         output.endUi();
         output.endFrame();

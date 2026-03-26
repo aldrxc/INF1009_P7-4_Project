@@ -3,6 +3,7 @@ package io.github.some_example_name.game.scene;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.Texture;
 
 import io.github.some_example_name.engine.io.EngineServices;
 import io.github.some_example_name.engine.io.OutputManager;
@@ -13,6 +14,7 @@ import io.github.some_example_name.game.io.CellInputMapper;
 import io.github.some_example_name.game.io.WebIntegrationService;
 import io.github.some_example_name.game.util.RunStats;
 import io.github.some_example_name.game.util.SceneFlow;
+import io.github.some_example_name.game.util.UIUtils;
 
 public class LoseScene extends AbstractScene {
 
@@ -20,6 +22,8 @@ public class LoseScene extends AbstractScene {
     private final CellIOController ioController;
     private BitmapFont font;
     private String headerText;
+
+    private Texture rTexture, enterTexture, oTexture;
 
     // The rotating phrases for when the tumor is defeated
     private final String[] losePhrases = {
@@ -44,6 +48,10 @@ public class LoseScene extends AbstractScene {
 
         // Randomly select one phrase when the scene loads
         headerText = losePhrases[(int) (Math.random() * losePhrases.length)];
+
+        rTexture = getServices().getAssets().getTexture("key-gui/settingKeys/r.png");
+        enterTexture = getServices().getAssets().getTexture("key-gui/settingKeys/enter.png");
+        oTexture = getServices().getAssets().getTexture("key-gui/settingKeys/o.png");
     }
 
     @Override
@@ -69,13 +77,15 @@ public class LoseScene extends AbstractScene {
         float cy = output.getUiHeight() / 2f;
 
         drawCentered(output, headerText, cx, cy + 110f);
-        drawCentered(output, "- - - - - - - - - -", cx, cy + 50f);
+        drawCentered(output, "- - - - - - - - - - - -", cx, cy + 50f);
         drawCentered(output, "CELLS EATEN: " + RunStats.getLastScore(), cx, cy + 10f);
         drawCentered(output, "TIME: " + String.format("%.1fs", RunStats.getLastSurvivalSeconds()), cx, cy - 25f);
         drawCentered(output, "BEST: " + RunStats.getBestScore(), cx, cy - 60f);
-        drawCentered(output, "- - - - - - - - - -", cx, cy - 100f);
-        drawCentered(output, "R: PLAY AGAIN   ENTER: MENU", cx, cy - 140f);
-        drawCentered(output, "O: OPEN DONATION PAGE", cx, cy - 180f);
+        drawCentered(output, "- - - - - - - - - - - -", cx, cy - 100f);
+
+        UIUtils.drawPromptCentered(output, font, rTexture, "PLAY AGAIN", cx - 120f, cy - 140f);
+        UIUtils.drawPromptCentered(output, font, enterTexture, "MENU", cx + 120f, cy - 140f);
+        UIUtils.drawPromptCentered(output, font, oTexture, "OPEN DONATION PAGE", cx, cy - 185f);
 
         output.endUi();
         output.endFrame();
