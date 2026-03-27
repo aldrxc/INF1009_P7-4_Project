@@ -3,7 +3,6 @@ package io.github.some_example_name.game.scene;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 
 import com.badlogic.gdx.graphics.Color;
@@ -30,13 +29,10 @@ import io.github.some_example_name.game.util.RunStats;
 import io.github.some_example_name.game.util.WaveManager;
 
 public class GameScene extends AbstractScene {
-    private static final float CHEMO_ACTIVATION_SPREAD = 40f;
+    private static final float CHEMO_ACTIVATION_SPREAD = 40.0f;
     private static final float WORLD_WIDTH = 2000f;
     private static final float WORLD_HEIGHT = 2000f;
     private static final float WORLD_MARGIN = 64f;
-    private static final float WIN_TIME_SECONDS = 120f;
-    private static final int MAX_ACTIVE_TCELLS = 10;
-    private static final int MAX_NORMAL_WAVES = 3;
     private static final float INTERACTION_QUERY_PADDING = 96f;
     private static final int SPAWN_ATTEMPTS = 24;
     private static final float SPAWN_PADDING = 12f;
@@ -44,6 +40,7 @@ public class GameScene extends AbstractScene {
     private static final float TCELL_MIN_PLAYER_DISTANCE = 220f;
     private static final float TCELL_SEPARATION_RADIUS = 45f;
     private static final float TCELL_SEPARATION_STRENGTH = 50f;
+    private static final float SPREAD_PER_HEALTHY_CELL = 1.0f;
 
     private final SceneManager sceneManager;
     private final CellIOController ioController;
@@ -62,8 +59,6 @@ public class GameScene extends AbstractScene {
     private boolean debugHitboxesVisible;
     private int score;
     private int infectedCells;
-    private int totalTargetCells;
-    private float spreadPerCell;
     private float elapsedSeconds;
 
     public GameScene(SceneManager sceneManager, EngineServices services, CellIOController ioController) {
@@ -84,15 +79,13 @@ public class GameScene extends AbstractScene {
         // pass asset manager into hud so it can grab key textures
         hudRenderer = new GameHudRenderer(getServices().getAssets());
         debugShapeRenderer = new ShapeRenderer();
-        bgTexture = getServices().getAssets().getTexture("bg.png");
-        wallTexture = getServices().getAssets().getTexture("wall_tile.png");
+        bgTexture = getServices().getAssets().getTexture("images/bg.png");
+        wallTexture = getServices().getAssets().getTexture("images/wall_tile.png");
 
         score = 0;
         infectedCells = 0;
         elapsedSeconds = 0f;
         ended = false;
-        totalTargetCells = 40 * MAX_NORMAL_WAVES;
-        spreadPerCell = 100f / totalTargetCells;
 
         OutputManager output = getServices().getOutputManager();
         output.setCameraBounds(0f, 0f, WORLD_WIDTH, WORLD_HEIGHT);
@@ -100,7 +93,7 @@ public class GameScene extends AbstractScene {
         player = CellFactory.createCancerCell(WORLD_WIDTH * 0.5f, WORLD_HEIGHT * 0.5f, ioController.getInputMapper());
         createEntity(player);
 
-        spawnNormalCellWave();
+        maintainHealthyPopulation();
         for (int i = 0; i < 2; i++) {
             spawnTCell(randomWalkableX(), randomWalkableY());
         }
@@ -120,6 +113,10 @@ public class GameScene extends AbstractScene {
         if (ended) {
             return;
         }
+        if (player.getHp() <= 0f) {
+            loseRun();
+            return;
+        }
 
         elapsedSeconds += delta;
         score = infectedCells * 100 + (int) (elapsedSeconds * 10f);
@@ -127,9 +124,17 @@ public class GameScene extends AbstractScene {
         clampToArena(player);
 
         processGameplayInteractions();
+        if (ended) {
+            return;
+        }
         activateChemoIfNeeded();
 
-        float chemoReduction = chemoManager.update(delta);
+        updateTCellAggression();
+
+        float chemoReduction = chemoManager.update(
+                delta,
+                cancerManager.getCurrentStage(),
+                cancerManager.getCurrentSpreadPercent());
         if (chemoReduction > 0f) {
             cancerManager.subtractSpread(chemoReduction);
         }
@@ -143,7 +148,6 @@ public class GameScene extends AbstractScene {
             ioController.getAudioHandler().playRadioactiveAlert();
         }
 
-        // 1. You only lose if your health drops to 0
         if (player.getHp() <= 0f) {
             loseRun();
             return;
@@ -190,9 +194,7 @@ public class GameScene extends AbstractScene {
                 cancerManager,
                 chemoManager,
                 infectedCells,
-                totalTargetCells,
                 elapsedSeconds,
-                WIN_TIME_SECONDS,
                 buildProgressPrompt());
         output.endFrame();
     }
@@ -215,7 +217,7 @@ public class GameScene extends AbstractScene {
                 nearby,
                 cancerManager,
                 ioController.getAudioHandler(),
-                spreadPerCell);
+                SPREAD_PER_HEALTHY_CELL);
 
         infectedCells += result.getInfectedCount();
         for (UUID entityId : result.getRemovedEntityIds()) {
@@ -226,6 +228,7 @@ public class GameScene extends AbstractScene {
         }
         if (result.isPlayerKilled()) {
             loseRun();
+            return;
         }
     }
 
@@ -246,25 +249,49 @@ public class GameScene extends AbstractScene {
     }
 
     private void updateSpawning(float delta) {
-        if (waveManager.shouldSpawnTCell(delta, cancerManager.getCurrentStage()) && countTCells() < MAX_ACTIVE_TCELLS) {
+        if (waveManager.shouldSpawnTCell(delta, cancerManager.getCurrentStage())
+                && countTCells() < waveManager.getMaxActiveTCells(cancerManager.getCurrentStage())) {
             spawnTCell(randomWalkableX(), randomWalkableY());
         }
-        if (waveManager.getNormalCellWave() < MAX_NORMAL_WAVES
-                && waveManager.shouldSpawnNextNormalCellWave(countNormalCells())) {
-            spawnNormalCellWave();
-        }
+        maintainHealthyPopulation();
     }
 
-    private void spawnNormalCellWave() {
-        int wave = waveManager.getNormalCellWave();
-        float speed = Math.min(70f + (wave * 18f), 140f);
-        float fleeRange = 120f + (wave * 20f);
+    private void maintainHealthyPopulation() {
+        int targetAlive = waveManager.getTargetHealthyCellCount(cancerManager.getCurrentStage());
+        int currentAlive = countNormalCells();
+        int spawnCount = Math.max(0, targetAlive - currentAlive);
+        if (spawnCount <= 0) {
+            return;
+        }
 
-        for (int i = 0; i < 40; i++) {
+        float speed = getHealthyCellSpeedForStage(cancerManager.getCurrentStage());
+        float fleeRange = getHealthyCellFleeRangeForStage(cancerManager.getCurrentStage());
+
+        for (int i = 0; i < spawnCount; i++) {
             NormalCell cell = CellFactory.createNormalCell(0f, 0f, speed, fleeRange);
             placeEntityAtSpawn(cell, NORMAL_CELL_MIN_PLAYER_DISTANCE);
             cell.setThreat(player);
             createEntity(cell);
+        }
+    }
+
+    private float getHealthyCellSpeedForStage(int stage) {
+        switch (Math.max(1, Math.min(4, stage))) {
+            case 1: return 72f;
+            case 2: return 84f;
+            case 3: return 96f;
+            case 4: return 108f;
+            default: return 72f;
+        }
+    }
+
+    private float getHealthyCellFleeRangeForStage(int stage) {
+        switch (Math.max(1, Math.min(4, stage))) {
+            case 1: return 120f;
+            case 2: return 136f;
+            case 3: return 150f;
+            case 4: return 165f;
+            default: return 120f;
         }
     }
 
@@ -281,6 +308,23 @@ public class GameScene extends AbstractScene {
                 clampToArena(entity);
             }
         }
+    }
+
+    private void updateTCellAggression() {
+        float aggression = getTCellAggressionForSpread(cancerManager.getCurrentSpreadPercent());
+        for (Entity entity : getEntities()) {
+            if (entity instanceof TCell && entity.isActive()) {
+                ((TCell) entity).setAggressionLevel(aggression);
+            }
+        }
+    }
+
+    private float getTCellAggressionForSpread(float spreadPercent) {
+        float clampedSpread = Math.max(0.0f, Math.min(100.0f, spreadPercent));
+        if (clampedSpread <= 75.0f) {
+            return clampedSpread / 100.0f;
+        }
+        return 0.75f;
     }
 
     private void applyTCellSeparation(float delta) {
@@ -449,9 +493,7 @@ public class GameScene extends AbstractScene {
     }
 
     private String buildProgressPrompt() {
-        return String.format(Locale.US,
-                "Spread through the organ. Infect cells, evade T-cells, survive %.0fs.",
-                WIN_TIME_SECONDS);
+        return "Spread through the organ. Infect cells, evade T-cells, reach 100% spread.";
     }
 
     private void renderDebugHitboxes(OutputManager output, float interpolationAlpha) {

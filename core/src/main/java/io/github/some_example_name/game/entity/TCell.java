@@ -29,6 +29,7 @@ public class TCell extends GameEntity {
     private float wanderTimer;
     private CancerCell target;
     private boolean pursuingTarget;
+    private float aggressionLevel;
 
     private enum PursuitMode {
         DIRECT(0f),
@@ -72,9 +73,9 @@ public class TCell extends GameEntity {
 
         float targetDistance = distanceToTarget();
         if (target != null) {
-            if (!pursuingTarget && targetDistance <= CHASE_RANGE) {
+            if (!pursuingTarget && targetDistance <= getEffectiveChaseRange()) {
                 pursuingTarget = true;
-            } else if (pursuingTarget && targetDistance > DISENGAGE_RANGE) {
+            } else if (pursuingTarget && targetDistance > getEffectiveDisengageRange()) {
                 pursuingTarget = false;
             }
         } else {
@@ -90,6 +91,10 @@ public class TCell extends GameEntity {
 
     public void setTarget(CancerCell target) {
         this.target = target;
+    }
+
+    public void setAggressionLevel(float aggressionLevel) {
+        this.aggressionLevel = Math.max(0f, Math.min(1f, aggressionLevel));
     }
 
     @Override
@@ -136,8 +141,8 @@ public class TCell extends GameEntity {
             return;
         }
 
-        float moveSpeed = speed * CHASE_SPEED_MULTIPLIER;
-        if (pursuitMode == PursuitMode.DIRECT || distanceToTarget() <= DIRECT_ENGAGE_DISTANCE) {
+        float moveSpeed = speed * (CHASE_SPEED_MULTIPLIER + (0.45f * aggressionLevel));
+        if (pursuitMode == PursuitMode.DIRECT || distanceToTarget() <= getEffectiveDirectEngageDistance()) {
             NpcBehaviour.chase(this, target, moveSpeed, deltaTime, movementManager);
             return;
         }
@@ -151,9 +156,25 @@ public class TCell extends GameEntity {
         }
 
         Vector2 perpendicular = new Vector2(-toTarget.y, toTarget.x).nor()
-                .scl(FLANK_DISTANCE * pursuitMode.flankSide);
+                .scl(getEffectiveFlankDistance() * pursuitMode.flankSide);
         Vector2 flankPoint = new Vector2(targetCenter).add(perpendicular);
         NpcBehaviour.moveTowardPoint(this, flankPoint.x, flankPoint.y, moveSpeed, deltaTime, movementManager);
+    }
+
+    private float getEffectiveChaseRange() {
+        return CHASE_RANGE + (aggressionLevel * 220f);
+    }
+
+    private float getEffectiveDisengageRange() {
+        return DISENGAGE_RANGE + (aggressionLevel * 260f);
+    }
+
+    private float getEffectiveFlankDistance() {
+        return FLANK_DISTANCE - (aggressionLevel * 60f);
+    }
+
+    private float getEffectiveDirectEngageDistance() {
+        return DIRECT_ENGAGE_DISTANCE + (aggressionLevel * 30f);
     }
 
     private PursuitMode randomPursuitMode() {

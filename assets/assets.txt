@@ -1,8 +1,12 @@
-Normal_cell.png
-bg.png
-cancer_cell.png
-crash.mp3
-damage.mp3
+audio/music/lungs_bgm.mp3
+audio/sfx/crash.mp3
+audio/sfx/damage.mp3
+audio/sfx/squelch.mp3
+images/Normal_cell.png
+images/bg.png
+images/cancer_cell.png
+images/tcell_strip.png
+images/wall_tile.png
 key-gui/movement/a.png
 key-gui/movement/arrow_down.png
 key-gui/movement/arrow_left.png

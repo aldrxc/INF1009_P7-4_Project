@@ -24,13 +24,13 @@ final class CellAssets {
     static Animation<TextureRegion> getCancerWalkAnimation() {
         ensureInitialised();
         if (cancerWalkAnimation == null) {
-            Texture cancerSheet = loadTexture("cancer_cell.png");
+            Texture cancerSheet = loadTexture("images/cancer_cell.png");
             TextureRegion[][] split = TextureRegion.split(cancerSheet, cancerSheet.getWidth() / 4, cancerSheet.getHeight());
             TextureRegion[] frames = new TextureRegion[4];
             for (int i = 0; i < 4; i++) {
                 frames[i] = split[0][i];
             }
-            cancerWalkAnimation = new Animation<>(0.15f, frames);
+            cancerWalkAnimation = new Animation<>(0.10f, frames);
             cancerWalkAnimation.setPlayMode(Animation.PlayMode.LOOP);
         }
         return cancerWalkAnimation;
@@ -39,7 +39,7 @@ final class CellAssets {
     static TextureRegion getNormalCellTexture() {
         ensureInitialised();
         if (normalCellRegion == null) {
-            Texture normalCellTexture = loadTexture("Normal_cell.png");
+            Texture normalCellTexture = loadTexture("images/Normal_cell.png");
             normalCellRegion = new TextureRegion(normalCellTexture);
         }
         return normalCellRegion;
@@ -48,7 +48,7 @@ final class CellAssets {
     static Animation<TextureRegion> getTCellWalkAnimation() {
         ensureInitialised();
         if (tCellWalkAnimation == null) {
-            Texture tCellSheet = loadTexture("tcell_strip.png");
+            Texture tCellSheet = loadTexture("images/tcell_strip.png");
             TextureRegion[] frames = new TextureRegion[5];
             for (int i = 0; i < 5; i++) {
                 frames[i] = new TextureRegion(tCellSheet, i * 64, 0, 64, 64);

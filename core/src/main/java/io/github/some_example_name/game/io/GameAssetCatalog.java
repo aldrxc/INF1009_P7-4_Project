@@ -6,11 +6,11 @@ import io.github.some_example_name.engine.io.AudioOutput;
 public final class GameAssetCatalog {
     private static final String[] TEXTURES = {
             // game textures
-            "bg.png",
-            "wall_tile.png",
-            "cancer_cell.png",
-            "Normal_cell.png",
-            "tcell_strip.png",
+            "images/bg.png",
+            "images/wall_tile.png",
+            "images/cancer_cell.png",
+            "images/Normal_cell.png",
+            "images/tcell_strip.png",
 
             // key gui - setting keys
             "key-gui/settingKeys/enter.png",
@@ -34,13 +34,13 @@ public final class GameAssetCatalog {
     };
 
     private static final String[] SOUNDS = {
-            "crash.mp3",
-            "damage.mp3",
-            "squelch.mp3"
+            "audio/sfx/crash.mp3",
+            "audio/sfx/damage.mp3",
+            "audio/sfx/squelch.mp3"
     };
 
     private static final String[] MUSIC = {
-            "lungs_bgm.mp3"
+            "audio/music/lungs_bgm.mp3"
     };
 
     private GameAssetCatalog() {
