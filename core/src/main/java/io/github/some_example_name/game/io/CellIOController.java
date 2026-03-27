@@ -34,7 +34,7 @@ public class CellIOController {
             audioHandler.setOrganBGM(gameState.currentOrgan);
         } else {
             // fallback just in case
-            audioHandler.setOrganBGM("lungs_bgm.mp3");
+            audioHandler.setOrganBGM("lungs");
         }
     }
 

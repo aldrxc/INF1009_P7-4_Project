@@ -75,8 +75,8 @@ public final class GameHudRenderer {
     }
 
     public void renderUi(OutputManager output, CancerCell player, CancerEvolutionManager cancerManager,
-            ChemoManager chemoManager, int infectedCells, int totalTargets,
-            float elapsedSeconds, float winTimeSeconds, String progressPrompt) {
+            ChemoManager chemoManager, int infectedCells,
+            float elapsedSeconds, String progressPrompt) {
         float uiWidth = output.getUiWidth();
         float uiHeight = output.getUiHeight();
 
@@ -104,22 +104,29 @@ public final class GameHudRenderer {
         font.setColor(Color.WHITE);
         font.draw(output.getBatch(), "HP: " + (int) player.getHp() + " / " + (int) player.getMaxHp(), 20f, top);
         font.draw(output.getBatch(), "LEVEL: " + player.getLevel(), 20f, top - 22f);
-        font.draw(output.getBatch(), "INFECTED: " + infectedCells + " / " + totalTargets, 20f, top - 44f);
+        font.draw(output.getBatch(), "CELLS INFECTED: " + infectedCells, 20f, top - 44f);
         font.draw(output.getBatch(),
-                String.format(Locale.US, "TIME: %.1fs / %.0fs", elapsedSeconds, winTimeSeconds),
+                String.format(Locale.US, "TIME ELAPSED: %.1fs", elapsedSeconds),
                 20f,
                 top - 66f);
 
         font.setColor(new Color(0.85f, 0.35f, 1f, 1f));
-        font.draw(output.getBatch(), "SPREAD: " + (int) spread + "%", 250f, top);
-        font.draw(output.getBatch(), "STAGE: " + cancerManager.getCurrentStage(), 250f, top - 22f);
+        font.draw(output.getBatch(), String.format(Locale.US, "SPREAD: %.1f%%", spread), 250f, top);
+        font.draw(output.getBatch(),
+                cancerManager.isTerminalStage() ? "STAGE: TERMINAL" : "STAGE: " + cancerManager.getCurrentStage(),
+                250f,
+                top - 22f);
 
         font.setColor(Color.ORANGE);
         font.draw(output.getBatch(), chemoManager.isActive()
-                ? "NEXT CHEMO: " + (int) chemoManager.getTimeUntilNextChemo() + "s"
+                ? "NEXT CHEMO: " + (int) chemoManager.getTimeUntilNextChemo(
+                        cancerManager.getCurrentStage(),
+                        cancerManager.getCurrentSpreadPercent()) + "s"
                 : "CHEMO: INACTIVE",
                 250f,
                 top - 44f);
+        font.setColor(Color.SALMON);
+        font.draw(output.getBatch(), cancerManager.getImmuneStrengthDescription(), 250f, top - 66f);
 
         font.setColor(Color.YELLOW);
         // font.draw(output.getBatch(), progressPrompt, 20f, 36f);

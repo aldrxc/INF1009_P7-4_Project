@@ -82,7 +82,7 @@ public class StartScene extends AbstractScene {
         drawCentered(output, bodyFont, "You are a cancer cell.", cx, cy + 20f);
         drawCentered(output, bodyFont, "Infect the body.", cx, cy - 10f);
         drawCentered(output, bodyFont, "Avoid the T-Cells.", cx, cy - 40f);
-        drawCentered(output, bodyFont, "Evolve. Spread. Survive.", cx, cy - 70f);
+        drawCentered(output, bodyFont, "Evolve. Spread. Take over the organ.", cx, cy - 70f);
         drawCentered(output, bodyFont, "- - - - - - - - - -", cx, cy - 105f);
 
         UIUtils.drawPromptCentered(output, bodyFont, enterTexture, "[ENTER] BEGIN INFECTION", cx, cy - 135f);

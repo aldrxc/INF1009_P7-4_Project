@@ -10,7 +10,11 @@ import io.github.some_example_name.game.movement.PlayerMovement;
 
 public class CancerCell extends GameEntity {
     private static final float STARTING_SIZE = 72f;
-    private static final float EXP_PER_LEVEL = 100f;
+    private static final float INITIAL_EXP_PER_LEVEL = 120f;
+    private static final float EXP_GROWTH_FACTOR = 1.25f;
+    private static final float PROGRESSION_POWER_GROWTH = 6f;
+    private static final float VISUAL_SIZE_GROWTH = 4f;
+    private static final float MAX_VISUAL_SIZE = 92f;
     private static final float MOVEMENT_ANIMATION_THRESHOLD = 0.01f;
 
     private final HealthBar healthBar;
@@ -19,7 +23,8 @@ public class CancerCell extends GameEntity {
     private final AnimationStateController<CancerCellState> animationController;
 
     private float exp = 0f;
-    private float expToNextLevel = EXP_PER_LEVEL;
+    private float expToNextLevel = INITIAL_EXP_PER_LEVEL;
+    private float progressionPower = STARTING_SIZE;
     private int level = 1;
 
     public CancerCell(float x, float y, CellInputMapper inputMapper) {
@@ -40,7 +45,7 @@ public class CancerCell extends GameEntity {
         animationController.setStillFrame(CancerCellState.JUMP, idleFrame);
         animationController.setStillFrame(CancerCellState.FALL, idleFrame);
 
-        applySize(STARTING_SIZE);
+        applyProgression(STARTING_SIZE, STARTING_SIZE);
         setHitboxInsets(12f, 7f, 4f, 9f);
         setUseCircularHitbox(true);
         setDrawOffset(0f, 0f);
@@ -49,9 +54,12 @@ public class CancerCell extends GameEntity {
 
     @Override
     public void update(float deltaTime) {
+        if (!isAlive()) {
+            return;
+        }
         Vector2 direction = inputMapper.processMovementInput();
         playerMovement.update(this, direction, inputMapper.checkDashAction(), deltaTime);
-        animationController.setState(resolveAnimationState(direction), false);
+        animationController.setState(resolveAnimationState(direction), true);
         animationController.update(deltaTime);
         setTexture(animationController.getCurrentFrame());
     }
@@ -62,17 +70,23 @@ public class CancerCell extends GameEntity {
     }
 
     public void gainExp(float amount) {
+        if (amount <= 0f) {
+            return;
+        }
+
         this.exp += amount;
-        if (this.exp >= expToNextLevel) {
+        while (this.exp >= expToNextLevel) {
+            this.exp -= expToNextLevel;
             levelUp();
         }
     }
 
     private void levelUp() {
         level++;
-        exp = 0f;
-        expToNextLevel *= 1.5f;
-        applySize(getSize() + 8f);
+        expToNextLevel *= EXP_GROWTH_FACTOR;
+        progressionPower += PROGRESSION_POWER_GROWTH;
+        float nextVisualSize = Math.min(MAX_VISUAL_SIZE, getWidth() + VISUAL_SIZE_GROWTH);
+        applyProgression(progressionPower, nextVisualSize);
     }
 
     @Override
@@ -109,5 +123,9 @@ public class CancerCell extends GameEntity {
         return direction != null && direction.len2() > MOVEMENT_ANIMATION_THRESHOLD
                 ? CancerCellState.RUN
                 : CancerCellState.IDLE;
+    }
+
+    private void applyProgression(float progressionPower, float visualSize) {
+        applySize(progressionPower, visualSize, visualSize);
     }
 }

@@ -1,25 +1,16 @@
 package io.github.some_example_name.game.util;
 
 /**
- * ChemoManager — time-based % infection reduction (chemotherapy).
- * SOLID/SRP: only responsible for chemo timing.
- *
- * Current behavior:
- * - Activation is controlled by game flow and starts once the run reaches its chemo threshold
- * - Once activated, chemo remains active for the rest of the run
- * - Warn player 5s before each hit
+ * Controls recurring chemotherapy pressure once activated.
+ * Later stages shorten the chemo interval slightly and make each hit stronger.
  */
 public class ChemoManager {
+    private static final float WARN_BEFORE = 5f;
 
-    private static final float CHEMO_INTERVAL  = 30f; // was 15f
-    private static final float CHEMO_REDUCTION = 5f;  // was 8f
-    private static final float WARN_BEFORE     = 5f;
-
-    private float   chemoTimer  = 0f;
-    private boolean active      = false;
+    private float chemoTimer = 0f;
+    private boolean active = false;
     private boolean warningSent = false;
 
-    /** Activates chemo for the rest of the current run. */
     public void activate() {
         if (!active) {
             active = true;
@@ -28,39 +19,74 @@ public class ChemoManager {
     }
 
     public void reset() {
-        chemoTimer  = 0f;
-        active      = false;
+        chemoTimer = 0f;
+        active = false;
         warningSent = false;
     }
 
-    /**
-     * Advances the chemo timer.
-     *
-     * @param delta seconds since last frame
-     * @return spread % to subtract this frame — pass to
-     *         CancerEvolutionManager.subtractSpread()
-     */
-    public float update(float delta) {
-        if (!active) return 0f;
-
-        chemoTimer += delta;
-
-        if (!warningSent && chemoTimer >= CHEMO_INTERVAL - WARN_BEFORE) {
-            warningSent = true;
-            System.out.println("[Chemo] WARNING — chemo incoming in "
-                + (int) WARN_BEFORE + "s!");
+    public float update(float delta, int currentStage, float currentSpreadPercent) {
+        if (!active) {
+            return 0f;
         }
 
-        if (chemoTimer >= CHEMO_INTERVAL) {
-            chemoTimer  = 0f;
+        float interval = getIntervalForStage(currentStage, currentSpreadPercent);
+        float reduction = getReductionForStage(currentStage, currentSpreadPercent);
+        chemoTimer += delta;
+
+        if (!warningSent && chemoTimer >= interval - WARN_BEFORE) {
+            warningSent = true;
+            System.out.println("[Chemo] WARNING - chemo incoming in " + (int) WARN_BEFORE + "s!");
+        }
+
+        if (chemoTimer >= interval) {
+            chemoTimer = 0f;
             warningSent = false;
-            System.out.println("[Chemo] Hit! Spread reduced by " + CHEMO_REDUCTION + "%");
-            return CHEMO_REDUCTION;
+            System.out.println("[Chemo] Hit! Spread reduced by " + reduction + "%");
+            return reduction;
         }
 
         return 0f;
     }
 
-    public boolean isActive()              { return active; }
-    public float getTimeUntilNextChemo()   { return Math.max(0f, CHEMO_INTERVAL - chemoTimer); }
+    public boolean isActive() {
+        return active;
+    }
+
+    public float getTimeUntilNextChemo(int currentStage, float currentSpreadPercent) {
+        return Math.max(0f, getIntervalForStage(currentStage, currentSpreadPercent) - chemoTimer);
+    }
+
+    private float getIntervalForStage(int currentStage, float currentSpreadPercent) {
+        float baseInterval;
+        switch (Math.max(1, Math.min(4, currentStage))) {
+            case 1:
+                baseInterval = 30f;
+                break;
+            case 2:
+                baseInterval = 28f;
+                break;
+            case 3:
+                baseInterval = 24f;
+                break;
+            case 4:
+                baseInterval = 22f;
+                break;
+            default:
+                baseInterval = 30f;
+                break;
+        }
+        return Math.max(10f, baseInterval - (getSpreadAggression(currentSpreadPercent) * 6f));
+    }
+
+    private float getReductionForStage(int currentStage, float currentSpreadPercent) {
+        return 7.0f;
+    }
+
+    private float getSpreadAggression(float currentSpreadPercent) {
+        float clampedSpread = Math.max(0f, Math.min(100f, currentSpreadPercent));
+        if (clampedSpread <= 75f) {
+            return clampedSpread / 100f;
+        }
+        return 0.75f;
+    }
 }

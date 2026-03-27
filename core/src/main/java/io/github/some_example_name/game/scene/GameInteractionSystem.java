@@ -16,6 +16,7 @@ import io.github.some_example_name.game.util.CancerEvolutionManager;
 public final class GameInteractionSystem {
     private static final float DEFAULT_DAMAGE = 18f;
     private static final float HEALTHY_CELL_HEAL = 5f;
+    private static final float HEALTHY_CELL_EXP = 40f;
 
     public static final class InteractionResult {
         private final List<UUID> removedEntityIds = new ArrayList<>();
@@ -62,7 +63,7 @@ public final class GameInteractionSystem {
                 other.setActive(false);
                 result.getRemovedEntityIds().add(other.getId());
                 result.infectedCount++;
-                player.gainExp(50f);
+                player.gainExp(HEALTHY_CELL_EXP);
                 player.heal(HEALTHY_CELL_HEAL);
                 cancerManager.addSpread(spreadPerCell);
                 if (audioHandler != null) {
@@ -71,8 +72,12 @@ public final class GameInteractionSystem {
             } else if (other instanceof TCell) {
                 other.setActive(false);
                 result.getRemovedEntityIds().add(other.getId());
-                result.replacementTCellCount++;
-                player.takeDamage(DEFAULT_DAMAGE);
+                if (!cancerManager.isTerminalStage()) {
+                    result.replacementTCellCount++;
+                }
+                if (!cancerManager.isTerminalStage()) {
+                    player.takeDamage(DEFAULT_DAMAGE);
+                }
                 if (audioHandler != null) {
                     audioHandler.playTCellDamage();
                 }
