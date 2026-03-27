@@ -4,6 +4,7 @@
 
 # Build outputs (all modules)
 **/build/
+**/bin/
 
 # Java compiled artifacts
 *.class
@@ -15,3 +16,6 @@ build/reports/
 # OS/editor noise (optional)
 .DS_Store
 Thumbs.db
+
+#assets
+.tmp_assets/
