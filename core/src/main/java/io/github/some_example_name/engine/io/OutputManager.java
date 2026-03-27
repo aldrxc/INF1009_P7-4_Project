@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -167,8 +168,8 @@ public class OutputManager implements Disposable {
             Renderable renderable = (Renderable) e;
             if (renderable.getTexture() != null) {
                 batch.draw(renderable.getTexture(),
-                    e.getInterpolatedPositionX(interpolationAlpha),
-                    e.getInterpolatedPositionY(interpolationAlpha),
+                    e.getInterpolatedPositionX(interpolationAlpha) + renderable.getDrawOffsetX(),
+                    e.getInterpolatedPositionY(interpolationAlpha) + renderable.getDrawOffsetY(),
                     e.getWidth(),
                     e.getHeight());
             }
@@ -243,6 +244,17 @@ public class OutputManager implements Disposable {
     public Vector2 getCameraPosition() {
         ensureInitialised();
         return new Vector2(worldCamera.position.x, worldCamera.position.y);
+    }
+
+    public void prepareWorldDebug() {
+        ensureFrameActive();
+        applyWorldViewport();
+        worldCamera.update();
+    }
+
+    public Matrix4 getWorldProjectionMatrix() {
+        ensureInitialised();
+        return worldCamera.combined;
     }
 
     @Override
