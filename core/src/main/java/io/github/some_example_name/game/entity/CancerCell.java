@@ -5,36 +5,29 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 
 import io.github.some_example_name.engine.collision.Collidable;
+import io.github.some_example_name.game.config.CancerProgressionConfig;
 import io.github.some_example_name.game.io.CellInputMapper;
 import io.github.some_example_name.game.movement.PlayerMovement;
 
 public class CancerCell extends GameEntity {
-    private static final float STARTING_SIZE = 72f;
-    private static final float INITIAL_EXP_PER_LEVEL = 120f;
-    private static final float EXP_GROWTH_FACTOR = 1.25f;
-    private static final float PROGRESSION_POWER_GROWTH = 6f;
-    private static final float VISUAL_SIZE_GROWTH = 4f;
-    private static final float MAX_VISUAL_SIZE = 92f;
-    private static final float MOVEMENT_ANIMATION_THRESHOLD = 0.01f;
-
     private final HealthBar healthBar;
     private final PlayerMovement playerMovement;
     private final CellInputMapper inputMapper;
     private final AnimationStateController<CancerCellState> animationController;
 
     private float exp = 0f;
-    private float expToNextLevel = INITIAL_EXP_PER_LEVEL;
-    private float progressionPower = STARTING_SIZE;
+    private float expToNextLevel = CancerProgressionConfig.INITIAL_EXP_PER_LEVEL;
+    private float progressionPower = CancerProgressionConfig.STARTING_SIZE;
     private int level = 1;
 
     public CancerCell(float x, float y, CellInputMapper inputMapper) {
-        super(x, y, STARTING_SIZE, STARTING_SIZE);
+        super(x, y, CancerProgressionConfig.STARTING_SIZE, CancerProgressionConfig.STARTING_SIZE);
         if (inputMapper == null) {
             throw new IllegalArgumentException("CellInputMapper cannot be null.");
         }
 
         this.inputMapper = inputMapper;
-        this.healthBar = new HealthBar(this, STARTING_SIZE, 5f, 4f);
+        this.healthBar = new HealthBar(this, CancerProgressionConfig.STARTING_SIZE, 5f, 4f);
         this.playerMovement = new PlayerMovement();
         this.animationController = new AnimationStateController<>(CancerCellState.class, CancerCellState.IDLE);
 
@@ -45,7 +38,7 @@ public class CancerCell extends GameEntity {
         animationController.setStillFrame(CancerCellState.JUMP, idleFrame);
         animationController.setStillFrame(CancerCellState.FALL, idleFrame);
 
-        applyProgression(STARTING_SIZE, STARTING_SIZE);
+        applyProgression(CancerProgressionConfig.STARTING_SIZE, CancerProgressionConfig.STARTING_SIZE);
         setHitboxInsets(12f, 7f, 4f, 9f);
         setUseCircularHitbox(true);
         setDrawOffset(0f, 0f);
@@ -83,9 +76,10 @@ public class CancerCell extends GameEntity {
 
     private void levelUp() {
         level++;
-        expToNextLevel *= EXP_GROWTH_FACTOR;
-        progressionPower += PROGRESSION_POWER_GROWTH;
-        float nextVisualSize = Math.min(MAX_VISUAL_SIZE, getWidth() + VISUAL_SIZE_GROWTH);
+        expToNextLevel *= CancerProgressionConfig.EXP_GROWTH_FACTOR;
+        progressionPower += CancerProgressionConfig.PROGRESSION_POWER_GROWTH;
+        float nextVisualSize = Math.min(CancerProgressionConfig.MAX_VISUAL_SIZE,
+                getWidth() + CancerProgressionConfig.VISUAL_SIZE_GROWTH);
         applyProgression(progressionPower, nextVisualSize);
     }
 
@@ -120,7 +114,7 @@ public class CancerCell extends GameEntity {
     }
 
     private CancerCellState resolveAnimationState(Vector2 direction) {
-        return direction != null && direction.len2() > MOVEMENT_ANIMATION_THRESHOLD
+        return direction != null && direction.len2() > CancerProgressionConfig.MOVEMENT_ANIMATION_THRESHOLD
                 ? CancerCellState.RUN
                 : CancerCellState.IDLE;
     }

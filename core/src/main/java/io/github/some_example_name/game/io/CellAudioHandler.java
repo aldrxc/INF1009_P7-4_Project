@@ -35,8 +35,4 @@ public class CellAudioHandler {
     public void setMenuBGM() {
         audio.playMusic(MENU_BGM);
     }
-
-    public void setEvolvedStageBGM(int stage) {
-        audio.playMusic(MUSIC_PATH + "stage_" + stage + "_bgm.mp3");
-    }
 }

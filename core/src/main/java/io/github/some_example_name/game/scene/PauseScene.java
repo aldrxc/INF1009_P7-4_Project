@@ -3,8 +3,6 @@ package io.github.some_example_name.game.scene;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-
 import io.github.some_example_name.engine.io.EngineServices;
 import io.github.some_example_name.engine.io.OutputManager;
 import io.github.some_example_name.engine.scene.AbstractScene;
@@ -41,8 +39,7 @@ public class PauseScene extends AbstractScene {
         font = new BitmapFont();
         font.setColor(Color.WHITE);
 
-        // Load the artwork directly!
-        bgTexture = new Texture("images/scenes/pausescene.jpg");
+        bgTexture = getServices().getAssets().getTexture("images/scenes/pausescene.jpg");
 
         pTexture = getServices().getAssets().getTexture("key-gui/settingKeys/p.png");
         rTexture = getServices().getAssets().getTexture("key-gui/settingKeys/r.png");
@@ -86,59 +83,39 @@ public class PauseScene extends AbstractScene {
         float cy = screenH / 2f;
 
         // 1. Draw the sleeping tumor full screen
-        output.getBatch().setColor(0.5f, 0.5f, 0.5f, 1f); // Dim it so text pops
-        output.getBatch().draw(bgTexture, 0, 0, screenW, screenH);
-        output.getBatch().setColor(Color.WHITE);
+        SceneUiSupport.drawFullscreenBackground(output, bgTexture, screenW, screenH, new Color(0.5f, 0.5f, 0.5f, 1f));
 
         // 2. PAUSE MENU
         font.getData().setScale(2.0f);
         font.setColor(Color.YELLOW);
-        drawCentered(output, "GAME PAUSED", cx, cy + 120f);
+        SceneUiSupport.drawCentered(output, font, "GAME PAUSED", cx, cy + 120f);
 
         font.getData().setScale(1.2f);
         font.setColor(Color.WHITE);
-        drawCentered(output, "- - - - - - - - - - - -", cx, cy + 70f);
+        SceneUiSupport.drawDivider(output, font, cx, cy + 70f);
 
         float menuStartX = cx - 110f; 
         UIUtils.drawPromptLeftAligned(output, font, pTexture, "[P] RESUME", menuStartX, cy + 10f);
         UIUtils.drawPromptLeftAligned(output, font, rTexture, "[R] RESTART", menuStartX, cy - 40f);
         UIUtils.drawPromptLeftAligned(output, font, escTexture, "[ESC] MAIN MENU", menuStartX, cy - 90f);
         
-        drawCentered(output, "- - - - - - - - - - - -", cx, cy - 130f);
+        SceneUiSupport.drawDivider(output, font, cx, cy - 130f);
 
         // 3. CONTROLS
         font.getData().setScale(1.0f);
         font.setColor(Color.LIGHT_GRAY);
         
-        float iconSize = 40f;
-        float keysBaseY = 30f;
-        float keysTopY = 75f;
-        float labelY = 140f;
-
-        float leftX = 40f;
-        font.draw(output.getBatch(), "MOVEMENT:", leftX, labelY);
-        UIUtils.drawKeyCluster(output, wTexture, aTexture, sTexture, dTexture, leftX, keysBaseY, iconSize);
-        UIUtils.drawKeyCluster(output, upTexture, leftTexture, downTexture, rightTexture, leftX + 160f, keysBaseY, iconSize);
-
-        float rightX = screenW - 250f;
-        font.draw(output.getBatch(), "ACTIONS:", rightX, labelY);
-        output.getBatch().draw(shiftTexture, rightX, keysTopY, iconSize, iconSize);
-        font.draw(output.getBatch(), "[SHIFT] Dash", rightX + iconSize + 10f, keysTopY + 25f);
-        output.getBatch().draw(pTexture, rightX, keysBaseY, iconSize, iconSize);
-        font.draw(output.getBatch(), "[P] Resume", rightX + iconSize + 10f, keysBaseY + 25f);
+        SceneUiSupport.drawMovementAndActionLegend(output, font,
+                wTexture, aTexture, sTexture, dTexture,
+                upTexture, leftTexture, downTexture, rightTexture,
+                shiftTexture, pTexture, "Resume", "[P]", screenW);
 
         output.endUi();
         output.endFrame();
     }
 
-    private void drawCentered(OutputManager output, String text, float cx, float y) {
-        GlyphLayout layout = new GlyphLayout(font, text);
-        font.draw(output.getBatch(), layout, cx - layout.width / 2f, y);
-    }
-
     @Override
     protected void onDispose() {
         if (font != null) font.dispose();
-        if (bgTexture != null) bgTexture.dispose();
     }
 }

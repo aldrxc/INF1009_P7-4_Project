@@ -86,9 +86,8 @@ public class HowToPlayScene extends AbstractScene {
         float uiHeight = output.getUiHeight();
         float cx = uiWidth * 0.5f;
 
-        output.getBatch().setColor(0.07f, 0.05f, 0.1f, 1f);
-        output.getBatch().draw(getServices().getAssets().getTexture("images/bg.png"), 0f, 0f, uiWidth, uiHeight);
-        output.getBatch().setColor(Color.WHITE);
+        SceneUiSupport.drawFullscreenBackground(output, getServices().getAssets().getTexture("images/bg.png"),
+                uiWidth, uiHeight, new Color(0.07f, 0.05f, 0.1f, 1f));
 
         titleFont.draw(output.getBatch(), "HOW TO PLAY", cx - 135f, uiHeight - 60f);
 

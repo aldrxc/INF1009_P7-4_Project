@@ -10,7 +10,6 @@ public class CellIOController {
     private final CellInputMapper inputMapper;
     private final CellDataManager dataManager;
     private final CellAudioHandler audioHandler;
-    private final CellUIRenderer uiRenderer;
     private final WebIntegrationService webService;
 
     public CellIOController(EngineServices services) {
@@ -20,7 +19,6 @@ public class CellIOController {
         this.inputMapper = new CellInputMapper(services.getInput());
         this.dataManager = new CellDataManager();
         this.audioHandler = new CellAudioHandler(services.getAudio());
-        this.uiRenderer = new CellUIRenderer(services.getOutputManager());
         this.webService = new WebIntegrationService();
     }
 
@@ -51,9 +49,7 @@ public class CellIOController {
     }
 
     public void dispose() {
-        if (uiRenderer != null) {
-            uiRenderer.dispose();
-        }
+        // no-op for now; IO subsystems are engine-owned
     }
 
     // getters for subsystems so the scene can access specific events

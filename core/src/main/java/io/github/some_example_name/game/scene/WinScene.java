@@ -3,8 +3,6 @@ package io.github.some_example_name.game.scene;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-
 import io.github.some_example_name.engine.io.EngineServices;
 import io.github.some_example_name.engine.io.OutputManager;
 import io.github.some_example_name.engine.scene.AbstractScene;
@@ -48,8 +46,7 @@ public class WinScene extends AbstractScene {
         font.getData().setScale(1.8f); // Slightly smaller to fit cleanly in the void
         font.setColor(new Color(0.9f, 0.7f, 1.0f, 1f)); // Light purple/pink to match the necrotic theme
 
-        // -- NEW -- Load your background image
-        bgTexture = new Texture("images/scenes/winscene.jpg");
+        bgTexture = getServices().getAssets().getTexture("images/scenes/winscene.jpg");
         
 
         // Randomly select one phrase when the scene loads
@@ -87,9 +84,7 @@ public class WinScene extends AbstractScene {
         // ---------------------------------------------------------
         // 1. Draw the Background Image (Dimmed for readability!)
         // ---------------------------------------------------------
-        output.getBatch().setColor(0.4f, 0.4f, 0.4f, 1f); // Dims the image to 40% brightness
-        output.getBatch().draw(bgTexture, 0, 0, screenW, screenH);
-        output.getBatch().setColor(Color.WHITE); // Reset color so the text isn't dimmed
+        SceneUiSupport.drawFullscreenBackground(output, bgTexture, screenW, screenH, new Color(0.4f, 0.4f, 0.4f, 1f));
 
         // ---------------------------------------------------------
         // 2. Draw Stats - Perfectly Centered
@@ -101,23 +96,34 @@ public class WinScene extends AbstractScene {
         float spacingDonation = 50f;
 
         font.setColor(new Color(0.9f, 0.4f, 1.0f, 1f)); // Bright purple for the header
-        drawCentered(output, headerText, cx, currentY);
+        SceneUiSupport.drawCentered(output, font, headerText, cx, currentY);
         
         currentY -= spacingMedium;
         font.setColor(Color.WHITE); 
-        drawCentered(output, "- - - - - - - - - - - -", cx, currentY);
+        SceneUiSupport.drawDivider(output, font, cx, currentY);
         
         currentY -= spacingMedium;
-        drawCentered(output, "CELLS EATEN: " + RunStats.getLastScore(), cx, currentY);
+        SceneUiSupport.drawCentered(output, font, "SCORE: " + RunStats.getLastScore(), cx, currentY);
         
         currentY -= spacingSmall;
-        drawCentered(output, "TIME: " + String.format("%.1fs", RunStats.getLastSurvivalSeconds()), cx, currentY);
+        SceneUiSupport.drawCentered(output, font, "CELLS INFECTED: " + RunStats.getLastInfectedCells(), cx, currentY);
         
         currentY -= spacingSmall;
-        drawCentered(output, "BEST: " + RunStats.getBestScore(), cx, currentY);
+        SceneUiSupport.drawCentered(output,
+                font,
+                "FINAL SPREAD: " + Math.round(RunStats.getLastSpreadPercent()) + "%   LEVEL: " + RunStats.getLastLevel(),
+                cx,
+                currentY);
         
         currentY -= spacingMedium;
-        drawCentered(output, "- - - - - - - - - - - -", cx, currentY);
+        SceneUiSupport.drawDivider(output, font, cx, currentY);
+
+        currentY -= spacingSmall;
+        SceneUiSupport.drawCentered(output,
+                font,
+                "TIME: " + String.format("%.1fs   BEST SCORE: %d", RunStats.getLastSurvivalSeconds(), RunStats.getBestScore()),
+                cx,
+                currentY);
 
         // ---------------------------------------------------------
         // 3. Draw Input Prompts
@@ -134,15 +140,8 @@ public class WinScene extends AbstractScene {
         output.endFrame();
     }
 
-    private void drawCentered(OutputManager output, String text, float cx, float y) {
-        GlyphLayout layout = new GlyphLayout(font, text);
-        font.draw(output.getBatch(), layout, cx - layout.width / 2f, y);
-    }
-
     @Override
     protected void onDispose() {
         if (font != null) font.dispose();
-        // -- NEW -- Clean up background texture memory!
-        if (bgTexture != null) bgTexture.dispose(); 
     }
 }

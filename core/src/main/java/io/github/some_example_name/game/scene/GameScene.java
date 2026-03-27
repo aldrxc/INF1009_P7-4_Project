@@ -9,7 +9,6 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
 
 import io.github.some_example_name.engine.collision.CollisionShape;
 import io.github.some_example_name.engine.entity.Entity;
@@ -17,6 +16,7 @@ import io.github.some_example_name.engine.io.EngineServices;
 import io.github.some_example_name.engine.io.OutputManager;
 import io.github.some_example_name.engine.scene.AbstractScene;
 import io.github.some_example_name.engine.scene.SceneManager;
+import io.github.some_example_name.game.config.GameBalanceConfig;
 import io.github.some_example_name.game.entity.CancerCell;
 import io.github.some_example_name.game.entity.CellFactory;
 import io.github.some_example_name.game.entity.GameEntity;
@@ -29,25 +29,13 @@ import io.github.some_example_name.game.util.RunStats;
 import io.github.some_example_name.game.util.WaveManager;
 
 public class GameScene extends AbstractScene {
-    private static final float CHEMO_ACTIVATION_SPREAD = 40.0f;
-    private static final float WORLD_WIDTH = 2000f;
-    private static final float WORLD_HEIGHT = 2000f;
-    private static final float WORLD_MARGIN = 64f;
-    private static final float INTERACTION_QUERY_PADDING = 96f;
-    private static final int SPAWN_ATTEMPTS = 24;
-    private static final float SPAWN_PADDING = 12f;
-    private static final float NORMAL_CELL_MIN_PLAYER_DISTANCE = 140f;
-    private static final float TCELL_MIN_PLAYER_DISTANCE = 220f;
-    private static final float TCELL_SEPARATION_RADIUS = 45f;
-    private static final float TCELL_SEPARATION_STRENGTH = 50f;
-    private static final float SPREAD_PER_HEALTHY_CELL = 1.0f;
-
     private final SceneManager sceneManager;
     private final CellIOController ioController;
     private final WaveManager waveManager;
     private final CancerEvolutionManager cancerManager;
     private final ChemoManager chemoManager;
     private final GameInteractionSystem interactionSystem;
+    private final GameWorldSystem worldSystem;
 
     private GameHudRenderer hudRenderer;
     private ShapeRenderer debugShapeRenderer;
@@ -72,6 +60,7 @@ public class GameScene extends AbstractScene {
         this.cancerManager = new CancerEvolutionManager();
         this.chemoManager = new ChemoManager();
         this.interactionSystem = new GameInteractionSystem();
+        this.worldSystem = new GameWorldSystem(this, waveManager, cancerManager);
     }
 
     @Override
@@ -88,15 +77,16 @@ public class GameScene extends AbstractScene {
         ended = false;
 
         OutputManager output = getServices().getOutputManager();
-        output.setCameraBounds(0f, 0f, WORLD_WIDTH, WORLD_HEIGHT);
+        output.setCameraBounds(0f, 0f, GameBalanceConfig.WORLD_WIDTH, GameBalanceConfig.WORLD_HEIGHT);
 
-        player = CellFactory.createCancerCell(WORLD_WIDTH * 0.5f, WORLD_HEIGHT * 0.5f, ioController.getInputMapper());
+        player = CellFactory.createCancerCell(
+                GameBalanceConfig.WORLD_WIDTH * 0.5f,
+                GameBalanceConfig.WORLD_HEIGHT * 0.5f,
+                ioController.getInputMapper());
         createEntity(player);
+        worldSystem.setPlayer(player);
 
-        maintainHealthyPopulation();
-        for (int i = 0; i < 2; i++) {
-            spawnTCell(randomWalkableX(), randomWalkableY());
-        }
+        worldSystem.spawnInitialEntities();
 
         ioController.getAudioHandler().setOrganBGM("lungs");
     }
@@ -121,15 +111,13 @@ public class GameScene extends AbstractScene {
         elapsedSeconds += delta;
         score = infectedCells * 100 + (int) (elapsedSeconds * 10f);
 
-        clampToArena(player);
+        worldSystem.clampToArena(player);
 
         processGameplayInteractions();
         if (ended) {
             return;
         }
         activateChemoIfNeeded();
-
-        updateTCellAggression();
 
         float chemoReduction = chemoManager.update(
                 delta,
@@ -139,10 +127,11 @@ public class GameScene extends AbstractScene {
             cancerManager.subtractSpread(chemoReduction);
         }
 
-        applyTCellSeparation(delta);
-        clampNpcEntities();
-        removeInactiveEntities();
-        updateSpawning(delta);
+        worldSystem.updateTCellAggression();
+        worldSystem.applyTCellSeparation(delta);
+        worldSystem.clampNpcEntities();
+        worldSystem.removeInactiveEntities();
+        worldSystem.updateSpawning(delta);
 
         if (cancerManager.checkEvolution() && cancerManager.getCurrentStage() >= 3) {
             ioController.getAudioHandler().playRadioactiveAlert();
@@ -153,7 +142,6 @@ public class GameScene extends AbstractScene {
             return;
         }
 
-        // 2. You win if you fully infect the body OR if you survive the entire time limit
         if (cancerManager.isBodyFullyInfected()) {
             winRun();
             return;
@@ -169,8 +157,8 @@ public class GameScene extends AbstractScene {
         output.beginFrame();
 
         output.beginWorld();
-        output.getBatch().draw(bgTexture, 0f, 0f, WORLD_WIDTH, WORLD_HEIGHT);
-        drawArenaFrame(output);
+        output.getBatch().draw(bgTexture, 0f, 0f, GameBalanceConfig.WORLD_WIDTH, GameBalanceConfig.WORLD_HEIGHT);
+        worldSystem.drawArenaFrame(output, wallTexture);
         output.endWorld();
 
         output.beginWorld();
@@ -217,15 +205,13 @@ public class GameScene extends AbstractScene {
                 nearby,
                 cancerManager,
                 ioController.getAudioHandler(),
-                SPREAD_PER_HEALTHY_CELL);
+                GameBalanceConfig.SPREAD_PER_HEALTHY_CELL);
 
         infectedCells += result.getInfectedCount();
         for (UUID entityId : result.getRemovedEntityIds()) {
             removeEntity(entityId);
         }
-        for (int i = 0; i < result.getReplacementTCellCount(); i++) {
-            spawnTCell(randomWalkableX(), randomWalkableY());
-        }
+        worldSystem.spawnReplacementTCells(result.getReplacementTCellCount());
         if (result.isPlayerKilled()) {
             loseRun();
             return;
@@ -234,7 +220,7 @@ public class GameScene extends AbstractScene {
 
     private void activateChemoIfNeeded() {
         if (!chemoManager.isActive()
-                && cancerManager.getCurrentSpreadPercent() >= CHEMO_ACTIVATION_SPREAD) {
+                && cancerManager.getCurrentSpreadPercent() >= GameBalanceConfig.CHEMO_ACTIVATION_SPREAD) {
             chemoManager.activate();
         }
     }
@@ -242,258 +228,14 @@ public class GameScene extends AbstractScene {
     private Rectangle buildInteractionQueryArea() {
         Rectangle playerBounds = player.getBounds();
         return new Rectangle(
-                playerBounds.x - INTERACTION_QUERY_PADDING,
-                playerBounds.y - INTERACTION_QUERY_PADDING,
-                playerBounds.width + INTERACTION_QUERY_PADDING * 2f,
-                playerBounds.height + INTERACTION_QUERY_PADDING * 2f);
-    }
-
-    private void updateSpawning(float delta) {
-        if (waveManager.shouldSpawnTCell(delta, cancerManager.getCurrentStage())
-                && countTCells() < waveManager.getMaxActiveTCells(cancerManager.getCurrentStage())) {
-            spawnTCell(randomWalkableX(), randomWalkableY());
-        }
-        maintainHealthyPopulation();
-    }
-
-    private void maintainHealthyPopulation() {
-        int targetAlive = waveManager.getTargetHealthyCellCount(cancerManager.getCurrentStage());
-        int currentAlive = countNormalCells();
-        int spawnCount = Math.max(0, targetAlive - currentAlive);
-        if (spawnCount <= 0) {
-            return;
-        }
-
-        float speed = getHealthyCellSpeedForStage(cancerManager.getCurrentStage());
-        float fleeRange = getHealthyCellFleeRangeForStage(cancerManager.getCurrentStage());
-
-        for (int i = 0; i < spawnCount; i++) {
-            NormalCell cell = CellFactory.createNormalCell(0f, 0f, speed, fleeRange);
-            placeEntityAtSpawn(cell, NORMAL_CELL_MIN_PLAYER_DISTANCE);
-            cell.setThreat(player);
-            createEntity(cell);
-        }
-    }
-
-    private float getHealthyCellSpeedForStage(int stage) {
-        switch (Math.max(1, Math.min(4, stage))) {
-            case 1: return 72f;
-            case 2: return 84f;
-            case 3: return 96f;
-            case 4: return 108f;
-            default: return 72f;
-        }
-    }
-
-    private float getHealthyCellFleeRangeForStage(int stage) {
-        switch (Math.max(1, Math.min(4, stage))) {
-            case 1: return 120f;
-            case 2: return 136f;
-            case 3: return 150f;
-            case 4: return 165f;
-            default: return 120f;
-        }
-    }
-
-    private void spawnTCell(float x, float y) {
-        TCell tCell = CellFactory.createTCell(x, y, 120f + cancerManager.getCurrentStage() * 18f);
-        placeEntityAtSpawn(tCell, TCELL_MIN_PLAYER_DISTANCE);
-        tCell.setTarget(player);
-        createEntity(tCell);
-    }
-
-    private void clampNpcEntities() {
-        for (Entity entity : getEntities()) {
-            if (entity != player && entity.isActive()) {
-                clampToArena(entity);
-            }
-        }
-    }
-
-    private void updateTCellAggression() {
-        float aggression = getTCellAggressionForSpread(cancerManager.getCurrentSpreadPercent());
-        for (Entity entity : getEntities()) {
-            if (entity instanceof TCell && entity.isActive()) {
-                ((TCell) entity).setAggressionLevel(aggression);
-            }
-        }
-    }
-
-    private float getTCellAggressionForSpread(float spreadPercent) {
-        float clampedSpread = Math.max(0.0f, Math.min(100.0f, spreadPercent));
-        if (clampedSpread <= 75.0f) {
-            return clampedSpread / 100.0f;
-        }
-        return 0.75f;
-    }
-
-    private void applyTCellSeparation(float delta) {
-        for (Entity entity : getEntities()) {
-            if (!(entity instanceof TCell) || !entity.isActive()) {
-                continue;
-            }
-
-            TCell tCell = (TCell) entity;
-            Vector2 center = new Vector2(
-                    tCell.getPositionX() + tCell.getWidth() * 0.5f,
-                    tCell.getPositionY() + tCell.getHeight() * 0.5f);
-            Vector2 separation = new Vector2();
-
-            for (Entity nearby : getNearbyEntities(center.x, center.y, TCELL_SEPARATION_RADIUS)) {
-                if (!(nearby instanceof TCell) || nearby == tCell || !nearby.isActive()) {
-                    continue;
-                }
-
-                float otherCenterX = nearby.getPositionX() + nearby.getWidth() * 0.5f;
-                float otherCenterY = nearby.getPositionY() + nearby.getHeight() * 0.5f;
-                float dx = center.x - otherCenterX;
-                float dy = center.y - otherCenterY;
-                float distSq = dx * dx + dy * dy;
-                if (distSq <= 0.0001f) {
-                    separation.add((float) (Math.random() - 0.5f), (float) (Math.random() - 0.5f));
-                    continue;
-                }
-
-                float distance = (float) Math.sqrt(distSq);
-                if (distance >= TCELL_SEPARATION_RADIUS) {
-                    continue;
-                }
-
-                float weight = (TCELL_SEPARATION_RADIUS - distance) / TCELL_SEPARATION_RADIUS;
-                separation.add(dx / distance * weight, dy / distance * weight);
-            }
-
-            if (separation.len2() > 0f) {
-                separation.nor().scl(TCELL_SEPARATION_STRENGTH * delta);
-                tCell.setPosition(
-                        tCell.getPositionX() + separation.x,
-                        tCell.getPositionY() + separation.y);
-            }
-        }
-    }
-
-    private void clampToArena(Entity entity) {
-        float x = Math.max(WORLD_MARGIN,
-                Math.min(entity.getPositionX(), WORLD_WIDTH - WORLD_MARGIN - entity.getWidth()));
-        float y = Math.max(WORLD_MARGIN,
-                Math.min(entity.getPositionY(), WORLD_HEIGHT - WORLD_MARGIN - entity.getHeight()));
-        entity.setPosition(x, y);
-    }
-
-    private void removeInactiveEntities() {
-        List<UUID> toRemove = new ArrayList<>();
-        for (Entity entity : getEntities()) {
-            if (entity == player) {
-                continue;
-            }
-            if (!entity.isActive()) {
-                toRemove.add(entity.getId());
-            } else if (entity instanceof GameEntity && !((GameEntity) entity).isAlive()) {
-                toRemove.add(entity.getId());
-            }
-        }
-        for (UUID id : toRemove) {
-            removeEntity(id);
-        }
-    }
-
-    private int countNormalCells() {
-        return countEntitiesOfType(NormalCell.class);
-    }
-
-    private int countTCells() {
-        return countEntitiesOfType(TCell.class);
-    }
-
-    private int countEntitiesOfType(Class<? extends Entity> type) {
-        int count = 0;
-        for (Entity entity : getEntities()) {
-            if (type.isInstance(entity) && entity.isActive()) {
-                count++;
-            }
-        }
-        return count;
-    }
-
-    private float randomWalkableX() {
-        return WORLD_MARGIN + (float) (Math.random() * (WORLD_WIDTH - (WORLD_MARGIN * 2f)));
-    }
-
-    private float randomWalkableY() {
-        return WORLD_MARGIN + (float) (Math.random() * (WORLD_HEIGHT - (WORLD_MARGIN * 2f)));
-    }
-
-    private void placeEntityAtSpawn(GameEntity entity, float minDistanceFromPlayer) {
-        Vector2 spawn = findSpawnPosition(entity, minDistanceFromPlayer);
-        entity.setPosition(spawn.x, spawn.y);
-    }
-
-    private Vector2 findSpawnPosition(GameEntity entity, float minDistanceFromPlayer) {
-        float maxX = WORLD_WIDTH - WORLD_MARGIN - entity.getWidth();
-        float maxY = WORLD_HEIGHT - WORLD_MARGIN - entity.getHeight();
-        float minX = WORLD_MARGIN;
-        float minY = WORLD_MARGIN;
-
-        for (int attempt = 0; attempt < SPAWN_ATTEMPTS; attempt++) {
-            float x = minX + (float) (Math.random() * Math.max(1f, maxX - minX));
-            float y = minY + (float) (Math.random() * Math.max(1f, maxY - minY));
-            entity.setPosition(x, y);
-            if (isSpawnPositionValid(entity, minDistanceFromPlayer)) {
-                return new Vector2(x, y);
-            }
-        }
-
-        float fallbackX = Math.max(minX, Math.min(entity.getPositionX(), maxX));
-        float fallbackY = Math.max(minY, Math.min(entity.getPositionY(), maxY));
-        return new Vector2(fallbackX, fallbackY);
-    }
-
-    private boolean isSpawnPositionValid(GameEntity entity, float minDistanceFromPlayer) {
-        Rectangle bounds = entity.getBounds();
-        Rectangle queryArea = new Rectangle(
-                bounds.x - SPAWN_PADDING,
-                bounds.y - SPAWN_PADDING,
-                bounds.width + SPAWN_PADDING * 2f,
-                bounds.height + SPAWN_PADDING * 2f);
-
-        if (player != null) {
-            Rectangle playerBounds = player.getBounds();
-            if (queryArea.overlaps(playerBounds)) {
-                return false;
-            }
-            float dx = (bounds.x + bounds.width * 0.5f) - (playerBounds.x + playerBounds.width * 0.5f);
-            float dy = (bounds.y + bounds.height * 0.5f) - (playerBounds.y + playerBounds.height * 0.5f);
-            if (dx * dx + dy * dy < minDistanceFromPlayer * minDistanceFromPlayer) {
-                return false;
-            }
-        }
-
-        for (Entity existing : getEntitiesInBounds(queryArea)) {
-            if (!(existing instanceof GameEntity) || !existing.isActive()) {
-                continue;
-            }
-            if (((GameEntity) existing).getBounds().overlaps(queryArea)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private void drawArenaFrame(OutputManager output) {
-        float tileSize = 64f;
-        for (float x = 0; x < WORLD_WIDTH; x += tileSize) {
-            output.getBatch().draw(wallTexture, x, 0f, tileSize, tileSize);
-            output.getBatch().draw(wallTexture, x, WORLD_HEIGHT - tileSize, tileSize, tileSize);
-        }
-        for (float y = tileSize; y < WORLD_HEIGHT - tileSize; y += tileSize) {
-            output.getBatch().draw(wallTexture, 0f, y, tileSize, tileSize);
-            output.getBatch().draw(wallTexture, WORLD_WIDTH - tileSize, y, tileSize, tileSize);
-        }
+                playerBounds.x - GameBalanceConfig.INTERACTION_QUERY_PADDING,
+                playerBounds.y - GameBalanceConfig.INTERACTION_QUERY_PADDING,
+                playerBounds.width + GameBalanceConfig.INTERACTION_QUERY_PADDING * 2f,
+                playerBounds.height + GameBalanceConfig.INTERACTION_QUERY_PADDING * 2f);
     }
 
     private String buildProgressPrompt() {
-        return "Spread through the organ. Infect cells, evade T-cells, reach 100% spread.";
+        return "Infect healthy cells to raise spread. Chemo starts at 40%. Terminal stage starts at 90%.";
     }
 
     private void renderDebugHitboxes(OutputManager output, float interpolationAlpha) {
@@ -539,13 +281,15 @@ public class GameScene extends AbstractScene {
 
     private void winRun() {
         ended = true;
-        RunStats.recordRun(score, elapsedSeconds, true);
+        RunStats.recordRun(score, infectedCells, player.getLevel(), cancerManager.getCurrentSpreadPercent(),
+                elapsedSeconds, true);
         sceneManager.setActive("win");
     }
 
     private void loseRun() {
         ended = true;
-        RunStats.recordRun(score, elapsedSeconds, false);
+        RunStats.recordRun(score, infectedCells, player.getLevel(), cancerManager.getCurrentSpreadPercent(),
+                elapsedSeconds, false);
         sceneManager.setActive("lose");
     }
 }

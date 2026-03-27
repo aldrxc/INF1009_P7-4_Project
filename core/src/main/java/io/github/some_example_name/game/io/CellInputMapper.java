@@ -2,11 +2,9 @@ package io.github.some_example_name.game.io;
 
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector2;
-import java.util.UUID;
 import io.github.some_example_name.engine.io.DynamicInput;
 
 public class CellInputMapper {
-    private UUID activeCellId;
     private final DynamicInput input;
 
     public CellInputMapper(DynamicInput input) {
@@ -14,14 +12,6 @@ public class CellInputMapper {
             throw new IllegalArgumentException("DynamicInput cannot be null");
         this.input = input;
     }
-
-    // public void setActiveCellId(UUID id) {
-    // this.activeCellId = id;
-    // }
-
-    // public UUID getActiveCellId() {
-    // return activeCellId;
-    // }
 
     public Vector2 processMovementInput() {
         Vector2 movement = new Vector2(0f, 0f);
@@ -39,9 +29,6 @@ public class CellInputMapper {
     }
 
     public boolean checkDashAction() {
-        // return input.isKeyPressed(Input.Keys.SHIFT_LEFT);
-
-        // let user use either left or right shift
         return input.isKeyPressed(Input.Keys.SHIFT_LEFT) || input.isKeyPressed(Input.Keys.SHIFT_RIGHT);
     }
 
@@ -68,22 +55,6 @@ public class CellInputMapper {
     public boolean checkDebugHitboxToggle() {
         return input.isKeyJustPressed(Input.Keys.F3);
     }
-
-    // public boolean checkJumpAction() {
-    // return input.isKeyJustPressed(Input.Keys.SPACE);
-    // }
-
-    // public float getHorizontalInput() {
-    // return processMovementInput().x;
-    // }
-
-    // public boolean checkSplitAction() {
-    // return input.isKeyJustPressed(Input.Keys.SPACE);
-    // }
-
-    // public boolean checkSwapAction() {
-    // return input.isKeyJustPressed(Input.Keys.TAB);
-    // }
 
     public Vector2 getMouseSelection() {
         return input.getMousePosition();

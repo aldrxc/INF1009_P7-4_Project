@@ -49,10 +49,6 @@ public class CancerEvolutionManager {
         return false;
     }
 
-    public void triggerRadioactiveWave() {
-        System.out.println("[Evolution] Radioactive wave at Stage " + currentStage + "!");
-    }
-
     public float getCurrentSpreadPercent() {
         return currentSpreadPercent;
     }

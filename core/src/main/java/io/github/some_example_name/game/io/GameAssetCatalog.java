@@ -11,6 +11,10 @@ public final class GameAssetCatalog {
             "images/cancer_cell.png",
             "images/Normal_cell.png",
             "images/tcell_strip.png",
+            "images/scenes/startscene.jpg",
+            "images/scenes/pausescene.jpg",
+            "images/scenes/winscene.jpg",
+            "images/scenes/losescene.jpg",
 
             // key gui - setting keys
             "key-gui/settingKeys/enter.png",
