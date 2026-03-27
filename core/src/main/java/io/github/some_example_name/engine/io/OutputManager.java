@@ -210,6 +210,20 @@ public class OutputManager implements Disposable {
         }
     }
 
+    public void followEntity(Entity target) {
+        followEntity(target, 0f, 0f);
+    }
+
+    public void followEntity(Entity target, float offsetX, float offsetY) {
+        if (target == null) {
+            throw new IllegalArgumentException("Target entity cannot be null.");
+        }
+        updateCamera(
+            target.getPositionX() + target.getWidth() * 0.5f + offsetX,
+            target.getPositionY() + target.getHeight() * 0.5f + offsetY
+        );
+    }
+
     public void setCameraBounds(float minX, float minY, float maxX, float maxY) {
         if (minX > maxX || minY > maxY) {
             throw new IllegalArgumentException("Camera bounds are invalid.");

@@ -8,3 +8,9 @@ dependencies {
     implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
   }
 }
+
+task runRegressionTests(type: JavaExec) {
+  description = 'Runs EngineRegressionSelfTest (no window required)'
+  classpath = sourceSets.main.runtimeClasspath
+  mainClass = 'io.github.some_example_name.tests.unit.EngineRegressionSelfTest'
+}

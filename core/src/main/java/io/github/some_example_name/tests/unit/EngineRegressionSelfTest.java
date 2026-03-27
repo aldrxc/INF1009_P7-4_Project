@@ -1,8 +1,8 @@
 package io.github.some_example_name.tests.unit;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import com.badlogic.gdx.math.Rectangle;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.github.some_example_name.engine.collision.Collidable;
 import io.github.some_example_name.engine.collision.CollisionManager;
